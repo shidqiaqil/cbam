@@ -1,0 +1,1 @@
+<script src="{{ asset('dist/js/tabler.min.js') }}" defer></script>

@@ -1,0 +1,81 @@
+<?php
+
+namespace App\Imports;
+
+use App\Models\MasterEnergySales;
+use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
+
+class EnergySalesImport implements ToCollection, WithHeadingRow, WithChunkReading
+{
+    private static array $monthMap = [
+        'january'   => 'jan',
+        'february'  => 'feb',
+        'march'     => 'mar',
+        'april'     => 'apr',
+        'may'       => 'may',
+        'june'      => 'jun',
+        'july'      => 'jul',
+        'august'    => 'aug',
+        'september' => 'sep',
+        'october'   => 'oct',
+        'november'  => 'nov',
+        'december'  => 'dec',
+    ];
+
+    private string $plant;
+    private string $period_month;
+    private int $period_year;
+
+    public function __construct(string $plant, string $period_month, int $period_year)
+    {
+        $this->plant = $plant;
+        $this->period_month = $period_month;
+        $this->period_year = $period_year;
+    }
+
+    public function collection(Collection $rows): void
+    {
+        $data = $rows->map(function ($row) {
+            // dd($row);
+            $monthCode = self::getMonthCode($this->period_month);
+            $quantity = isset($row[$monthCode]) ? (float) str_replace(',', '.', str_replace('.', '', (string) $row[$monthCode])) : 0;
+            return [
+                'plant'         => $this->plant,
+                'period_month'  => $this->period_month,
+                'period_year'   => $this->period_year,
+                'en_name'       => $row['en_name'] ?? '',
+                'use_product'   => $row['useproduct'] ?? '',
+                'en_mgt_name'   => $row['enmgt_name'] ?? '',
+                'uom'           => $row['uom'] ?? '',
+                'quantity'      => round((float) ($row[self::getMonthCode($this->period_month)] ?? 0), 2),
+                'created_at'    => now(),
+                'updated_at'    => now(),
+            ];
+        })->filter(function ($row) {
+            return !empty($row['en_name']) || !empty($row['use_product']) || !empty($row['en_mgt_name']);
+        });
+
+        if ($data->isNotEmpty()) {
+            MasterEnergySales::insert($data->toArray());
+        }
+    }
+
+    public function chunkSize(): int
+    {
+        return 1000;
+    }
+
+    private static function getMonthCode(string $month): string
+    {
+        $month = strtolower($month);
+        if (!array_key_exists($month, self::$monthMap)) {
+            throw new \InvalidArgumentException(
+                "Invalid month: '{$month}'. Expected: " . implode(', ', array_keys(self::$monthMap))
+            );
+        }
+        return self::$monthMap[$month];
+    }
+}
