@@ -22,6 +22,73 @@ class EnergyMaster extends Component
     #[Url]
     public $perPage = 20;
 
+    public $showDeleteModal = false;
+    public $deleteYear = '';
+    public $deleteMonth = '';
+
+    public function openDeleteModal()
+    {
+        $this->showDeleteModal = true;
+        $this->deleteYear = $this->yearFilter ?: ($this->getYearsProperty()->first() ?? '');
+        $this->deleteMonth = '';
+        $this->dispatch('open-delete-modal'); // align with BfMaster
+    }
+
+    public function closeDeleteModal()
+    {
+        $this->showDeleteModal = false;
+        $this->deleteYear = '';
+        $this->deleteMonth = '';
+        $this->dispatch('close-delete-modal'); // align with BfMaster
+    }
+
+    public function deleteCurrentFilterData()
+    {
+        if (empty($this->deleteYear) || empty($this->deleteMonth)) {
+            session()->flash('message', 'Pilih tahun dan bulan terlebih dahulu.');
+            session()->flash('message_type', 'danger');
+            return;
+        }
+
+        $monthMap = [
+            'Jan' => 'january',
+            'Feb' => 'february',
+            'Mar' => 'march',
+            'Apr' => 'april',
+            'May' => 'may',
+            'Jun' => 'june',
+            'Jul' => 'july',
+            'Aug' => 'august',
+            'Sep' => 'september',
+            'Oct' => 'october',
+            'Nov' => 'november',
+            'Dec' => 'december',
+        ];
+
+        $fullMonth = strtolower($monthMap[$this->deleteMonth] ?? $this->deleteMonth);
+
+        $deletedCount = 0;
+
+        switch ($this->activeTab) {
+            case 'data':
+                $deletedCount = MasterEnergyData::where('period_year', $this->deleteYear)
+                    ->whereRaw('LOWER(period_month) = ?', [$fullMonth])
+                    ->delete();
+                break;
+            case 'sales':
+                $deletedCount = MasterEnergySales::where('period_year', $this->deleteYear)
+                    ->whereRaw('LOWER(period_month) = ?', [$fullMonth])
+                    ->delete();
+                break;
+        }
+
+        session()->flash('message', "Berhasil hapus {$deletedCount} record(s) {$this->deleteYear} {$this->deleteMonth}.");
+        session()->flash('message_type', 'success');
+
+        $this->closeDeleteModal();
+        $this->resetPage("page_{$this->activeTab}");
+    }
+
     public function updatedSearch()
     {
         $this->resetPage('page_data');
@@ -56,6 +123,10 @@ class EnergyMaster extends Component
             ]
         );
     }
+    public function getMonthsProperty()
+    {
+        return collect(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
+    }
 
     public function getYearsProperty()
     {
@@ -75,11 +146,13 @@ class EnergyMaster extends Component
         $energyData = $this->getEnergyDataProperty();
         $energySales = $this->getEnergySalesProperty();
         $years = $this->getYearsProperty();
+        $months = $this->getMonthsProperty();
 
         return view('livewire.energy-master', [
             'energyData' => $energyData,
             'energySales' => $energySales,
             'years' => $years,
+            'months' => $months,
             'activeTab' => $this->activeTab
         ]);
     }

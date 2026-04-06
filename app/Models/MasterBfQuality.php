@@ -5,12 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class MasterBf extends Model
+
+class MasterBfQuality extends Model
 {
     //
     use HasFactory;
 
-    protected $table = 'master_bfs';
+    protected $table = 'master_bf_qualities';
 
     protected $fillable = [
         'plant',
@@ -20,5 +21,6 @@ class MasterBf extends Model
         'sub_class',
         'sub_subclass',
         'quantity',
+
     ];
 }

@@ -139,7 +139,8 @@
                                         <li><a class="dropdown-item" href="{{ route('sintermaster') }}">Sinter</a></li>
                                         <li><a class="dropdown-item" href="{{ route('steelmakingmaster') }}">Steel
                                                 Making</a></li>
-                                        <li><a class="dropdown-item" href="">Blast Furnace</a></li>
+                                        <li><a class="dropdown-item" href="{{ route('bfmaster') }}">Blast Furnace</a>
+                                        </li>
 
 
                                     </ul>

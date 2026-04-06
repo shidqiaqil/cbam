@@ -12,6 +12,7 @@ use App\Imports\SteelMakingImport;
 use App\Imports\EnergyImport;
 use App\Imports\PcoImport;
 use App\Imports\SinterImport;
+use App\Imports\BfImport;
 
 
 #[Layout('layouts.app')]
@@ -73,9 +74,17 @@ class UploadFile extends Component
 
             $this->progress = 100;
             session()->flash('message', 'File succesfully Uploaded!');
+        } elseif ($this->plant === 'blast furnace') {
+            Excel::import(
+                new BfImport($this->plant, $this->month, (int) $this->year),
+                $realPath
+            );
+
+            $this->progress = 100;
+            session()->flash('message', 'File succesfully Uploaded!');
         } else {
             $this->progress = 100;
-            session()->flash('message', 'Upload supported only for Steel Making, Energy, PCO, and Sinter plants currently.');
+            session()->flash('message', 'Upload supported only for Steel Making, Energy, PCO, Sinter, and BF plants currently.');
         }
 
         $this->isUploading = false;

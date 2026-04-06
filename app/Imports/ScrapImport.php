@@ -41,24 +41,23 @@ class ScrapImport extends DefaultValueBinder implements ToCollection, WithHeadin
     {
         $monthCode = self::getMonthCode($this->period_month);
 
-        $data = $rows->map(function ($row) use ($monthCode) {
+        foreach ($rows as $row) {
+            if (empty($row['category'])) continue;
+
             $quantityRaw = $row[$monthCode] ?? 0;
+            $quantity = round((float) str_replace(',', '.', str_replace('.', '', (string) $quantityRaw)), 3);
 
-            return [
-                'plant'        => $this->plant,
-                'period_month' => $this->period_month,
-                'period_year'  => $this->period_year,
-                'category'     => $row['category'] ?? '',
-                'sub_category' => $row['sub_category'] ?? '',
-                'unit'         => $row['unit'] ?? '',
-                'quantity'       => round((float) str_replace(',', '.', str_replace('.', '', (string) ($row[self::getMonthCode($this->period_month)] ?? 0))), 3),
-                'created_at'     => now(),
-                'updated_at'     => now(),
-            ];
-        })->filter(fn($row) => !empty($row['category']));
-
-        if ($data->isNotEmpty()) {
-            MasterSmpScrap::insert($data->toArray());
+            MasterSmpScrap::updateOrCreate(
+                [
+                    'plant'        => $this->plant,
+                    'period_month' => $this->period_month,
+                    'period_year'  => $this->period_year,
+                    'category'     => $row['category'] ?? '',
+                    'sub_category' => $row['sub_category'] ?? '',
+                    'unit'         => $row['unit'] ?? ''
+                ],
+                ['quantity' => $quantity]
+            );
         }
     }
 

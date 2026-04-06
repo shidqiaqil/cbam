@@ -39,25 +39,22 @@ class PcoImport implements ToCollection, WithHeadingRow, WithChunkReading
 
     public function collection(Collection $rows): void
     {
-        $data = $rows->map(function ($row) {
-            $monthCode = self::getMonthCode($this->period_month);
-            $quantity = isset($row[$monthCode]) ? (float) str_replace(',', '.', str_replace('.', '', (string) $row[$monthCode])) : 0;
-            return [
-                'plant'        => $this->plant,
-                'period_month' => $this->period_month,
-                'period_year'  => $this->period_year,
-                'criteria'     => $row['criteria'] ?? '',
-                'unit'         => $row['unit'] ?? '',
-                'quantity'     => round((float) ($row[self::getMonthCode($this->period_month)] ?? 0), 2),
-                'created_at'   => now(),
-                'updated_at'   => now(),
-            ];
-        })->filter(function ($row) {
-            return !empty($row['criteria']);
-        });
+        foreach ($rows as $row) {
+            if (empty($row['criteria'])) continue;
 
-        if ($data->isNotEmpty()) {
-            MasterPco::insert($data->toArray());
+            $monthCode = self::getMonthCode($this->period_month);
+            $quantity = round((float) ($row[$monthCode] ?? 0), 2);
+
+            MasterPco::updateOrCreate(
+                [
+                    'plant'        => $this->plant,
+                    'period_month' => $this->period_month,
+                    'period_year'  => $this->period_year,
+                    'criteria'     => $row['criteria'] ?? '',
+                    'unit'         => $row['unit'] ?? ''
+                ],
+                ['quantity' => $quantity]
+            );
         }
     }
 

@@ -2,13 +2,13 @@
 
 namespace App\Imports;
 
-use App\Models\MasterEnergyData;
+use App\Models\MasterBfQuality;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 
-class EnergyDataImport implements ToCollection, WithHeadingRow, WithChunkReading
+class BfQualityImport implements ToCollection, WithHeadingRow, WithChunkReading
 {
     private static array $monthMap = [
         'january'   => 'jan',
@@ -39,23 +39,23 @@ class EnergyDataImport implements ToCollection, WithHeadingRow, WithChunkReading
     public function collection(Collection $rows): void
     {
         foreach ($rows as $row) {
-            if (empty($row['plant_code']) && empty($row['energy_name'])) continue;
+            if (empty($row['classification'])) continue;
 
             $monthCode = self::getMonthCode($this->period_month);
-            $quantity = round((float) ($row[$monthCode] ?? 0), 2);
+            $quantity = round((float) str_replace(',', '.', str_replace('.', '', (string) ($row[$monthCode] ?? 0))), 2);
 
-            MasterEnergyData::updateOrCreate(
+            MasterBfQuality::updateOrCreate(
                 [
-                    'plant'        => $this->plant,
-                    'period_month' => $this->period_month,
-                    'period_year'  => $this->period_year,
-                    'plant_code'   => $row['plant_code'] ?? '',
-                    'plant_name'   => $row['plant_name'] ?? '',
-                    'criteria'     => $row['criteria'] ?? '',
-                    'energy_name'  => $row['energy_name'] ?? '',
-                    'unit'         => $row['unit'] ?? ''
+                    'period_year'   => $this->period_year,
+                    'plant'         => $this->plant,
+                    'classification' => $row['classification'] ?? '',
+                    'sub_class'     => $row['sub_class'] ?? '',
+                    'sub_subclass'  => $row['sub_subclass'] ?? '',
+                    'period_month'  => $this->period_month
                 ],
-                ['quantity' => $quantity]
+                [
+                    'quantity' => $quantity
+                ]
             );
         }
     }

@@ -20,6 +20,61 @@ class PcoMaster extends Component
     public $yearFilter = '';
     public $perPage = 20;
 
+    public $showDeleteModal = false;
+    public $deleteYear = '';
+    public $deleteMonth = '';
+
+    public function openDeleteModal()
+    {
+        $this->showDeleteModal = true;
+        $this->deleteYear = $this->yearFilter ?: ($this->getYearsProperty()->first() ?? '');
+        $this->deleteMonth = '';
+        $this->dispatch('open-delete-modal'); // tambah ini
+    }
+
+    public function closeDeleteModal()
+    {
+        $this->showDeleteModal = false;
+        $this->deleteYear = '';
+        $this->deleteMonth = '';
+        $this->dispatch('close-delete-modal'); // tambah ini
+    }
+
+    public function deleteCurrentFilterData()
+    {
+        if (empty($this->deleteYear) || empty($this->deleteMonth)) {
+            session()->flash('message', 'Pilih tahun dan bulan terlebih dahulu.');
+            session()->flash('message_type', 'danger');
+            return;
+        }
+        $monthMap = [
+            'Jan' => 'january',
+            'Feb' => 'february',
+            'Mar' => 'march',
+            'Apr' => 'april',
+            'May' => 'may',
+            'Jun' => 'june',
+            'Jul' => 'july',
+            'Aug' => 'august',
+            'Sep' => 'september',
+            'Oct' => 'october',
+            'Nov' => 'november',
+            'Dec' => 'december',
+        ];
+
+        $fullMonth = strtolower($monthMap[$this->deleteMonth] ?? $this->deleteMonth);
+
+        $deletedCount = MasterPco::where('period_year', $this->deleteYear)
+            ->whereRaw('LOWER(period_month) = ?', [$fullMonth])
+            ->delete();
+
+
+        session()->flash('message', "Berhasil hapus {$deletedCount} record(s) {$this->deleteYear} {$this->deleteMonth}.");
+        session()->flash('message_type', 'success');
+        $this->closeDeleteModal();
+        $this->resetPage();
+    }
+
     public function updatedSearch()
     {
         $this->resetPage();
@@ -52,6 +107,11 @@ class PcoMaster extends Component
         );
     }
 
+    public function getMonthsProperty()
+    {
+        return collect(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
+    }
+
     public function getYearsProperty()
     {
         return MasterPco::distinct()
@@ -68,10 +128,12 @@ class PcoMaster extends Component
     {
         $pcoData = $this->getPcoDataProperty();
         $years = $this->getYearsProperty();
+        $months = $this->getMonthsProperty();
 
         return view('livewire.pco-master', [
             'pcoData' => $pcoData,
             'years' => $years,
+            'months' => $months,
             'activeTab' => $this->activeTab
         ]);
     }

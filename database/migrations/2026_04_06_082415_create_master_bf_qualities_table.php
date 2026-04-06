@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('master_bfs', function (Blueprint $table) {
+        Schema::create('master_bf_qualities', function (Blueprint $table) {
             $table->id();
             $table->string('plant');
             $table->string('period_month');
@@ -20,7 +20,6 @@ return new class extends Migration
             $table->string('sub_class');
             $table->string('sub_subclass');
             $table->decimal('quantity', 20, 2);
-
             $table->timestamps();
         });
     }
@@ -30,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('master_bfs');
+        Schema::dropIfExists('master_bf_qualities');
     }
 };

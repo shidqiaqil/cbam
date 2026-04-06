@@ -39,26 +39,22 @@ class SinterImport implements ToCollection, WithHeadingRow, WithChunkReading
 
     public function collection(Collection $rows): void
     {
-
-        $data = $rows->map(function ($row) {
+        foreach ($rows as $row) {
+            if (empty($row['classification'])) continue;
 
             $monthCode = self::getMonthCode($this->period_month);
+            $quantity = round((float) ($row[$monthCode] ?? 0), 2);
 
-            // $quantity = isset($row[$monthCode]) ? (float) str_replace(',', '.', str_replace('.', '', (string) $row[$monthCode])) : 0;
-            return [
-                'plant'        => $this->plant,
-                'period_month' => $this->period_month,
-                'period_year'  => $this->period_year,
-                'classification' => $row['classification'] ?? '',
-                'sub_class'    => $row['sub_class'] ?? '',
-                'quantity'     => round((float) ($row[self::getMonthCode($this->period_month)] ?? 0), 2),
-                'created_at'   => now(),
-                'updated_at'   => now(),
-            ];
-        });
-
-        if ($data->isNotEmpty()) {
-            MasterSinter::insert($data->toArray());
+            MasterSinter::updateOrCreate(
+                [
+                    'plant'        => $this->plant,
+                    'period_month' => $this->period_month,
+                    'period_year'  => $this->period_year,
+                    'classification' => $row['classification'] ?? '',
+                    'sub_class'    => $row['sub_class'] ?? ''
+                ],
+                ['quantity' => $quantity]
+            );
         }
     }
 

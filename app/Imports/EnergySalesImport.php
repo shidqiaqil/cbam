@@ -38,28 +38,24 @@ class EnergySalesImport implements ToCollection, WithHeadingRow, WithChunkReadin
 
     public function collection(Collection $rows): void
     {
-        $data = $rows->map(function ($row) {
-            // dd($row);
-            $monthCode = self::getMonthCode($this->period_month);
-            $quantity = isset($row[$monthCode]) ? (float) str_replace(',', '.', str_replace('.', '', (string) $row[$monthCode])) : 0;
-            return [
-                'plant'         => $this->plant,
-                'period_month'  => $this->period_month,
-                'period_year'   => $this->period_year,
-                'en_name'       => $row['en_name'] ?? '',
-                'use_product'   => $row['useproduct'] ?? '',
-                'en_mgt_name'   => $row['enmgt_name'] ?? '',
-                'uom'           => $row['uom'] ?? '',
-                'quantity'      => round((float) ($row[self::getMonthCode($this->period_month)] ?? 0), 2),
-                'created_at'    => now(),
-                'updated_at'    => now(),
-            ];
-        })->filter(function ($row) {
-            return !empty($row['en_name']) || !empty($row['use_product']) || !empty($row['en_mgt_name']);
-        });
+        foreach ($rows as $row) {
+            if (empty($row['en_name']) && empty($row['use_product']) && empty($row['en_mgt_name'])) continue;
 
-        if ($data->isNotEmpty()) {
-            MasterEnergySales::insert($data->toArray());
+            $monthCode = self::getMonthCode($this->period_month);
+            $quantity = round((float) ($row[$monthCode] ?? 0), 2);
+
+            MasterEnergySales::updateOrCreate(
+                [
+                    'plant'         => $this->plant,
+                    'period_month'  => $this->period_month,
+                    'period_year'   => $this->period_year,
+                    'en_name'       => $row['en_name'] ?? '',
+                    'use_product'   => $row['useproduct'] ?? '',
+                    'en_mgt_name'   => $row['enmgt_name'] ?? '',
+                    'uom'           => $row['uom'] ?? ''
+                ],
+                ['quantity' => $quantity]
+            );
         }
     }
 

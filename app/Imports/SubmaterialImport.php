@@ -39,31 +39,24 @@ class SubmaterialImport extends DefaultValueBinder implements ToCollection, With
 
     public function collection(Collection $rows): void
     {
+        foreach ($rows as $row) {
+            if (empty($row['classification'])) continue;
 
-        $data = $rows->map(function ($row) {
-            // dd($row);
-            $raw = $row[self::getMonthCode($this->period_month)] ?? 0;
+            $monthCode = self::getMonthCode($this->period_month);
+            $raw = $row[$monthCode] ?? 0;
+            $quantity = is_numeric($raw) ? (float) $raw : (float) str_replace(',', '.', str_replace('.', '', (string) $raw));
 
-            $quantity = is_numeric($raw)
-                ? (float) $raw
-                : (float) str_replace(',', '.', str_replace('.', '', (string) $raw));
-
-            return [
-                'plant'          => $this->plant,
-                'period_month'   => $this->period_month,
-                'period_year'    => $this->period_year,
-                'classification' => $row['classification'] ?? '',
-                'sub_class'      => $row['sub_class'] ?? '',
-                'unit'           => $row['unit'] ?? '',
-                'quantity'       => round((float) ($row[self::getMonthCode($this->period_month)] ?? 0), 2),
-                'created_at'     => now(),
-                'updated_at'     => now(),
-            ];
-        })->filter(fn($row) => !empty($row['classification']));
-
-        if ($data->isNotEmpty()) {
-            // dd($data->toArray()); // <-- sini
-            MasterSmpSubmaterial::insert($data->toArray());
+            MasterSmpSubmaterial::updateOrCreate(
+                [
+                    'plant'          => $this->plant,
+                    'period_month'   => $this->period_month,
+                    'period_year'    => $this->period_year,
+                    'classification' => $row['classification'] ?? '',
+                    'sub_class'      => $row['sub_class'] ?? '',
+                    'unit'           => $row['unit'] ?? ''
+                ],
+                ['quantity' => round($quantity, 2)]
+            );
         }
     }
 

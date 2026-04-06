@@ -26,17 +26,64 @@
                                     @endforeach
                                 </select>
                             </div>
-                            {{-- <div class="btn-list ms-2">
-                                <div class="dropdown">
-                                    <button class="btn dropdown-toggle" data-bs-toggle="dropdown">Download</button>
-                                    <div class="dropdown-menu">
-                                        <a class="dropdown-item" href="#">CSV</a>
-                                        <a class="dropdown-item" href="#">Excel</a>
-                                    </div>
-                                </div>
-                            </div> --}}
+                            <button wire:click="openDeleteModal" class="btn btn-danger"
+                                style="white-space: nowrap; min-width: 150px;">
+                                <i class="ti ti-trash"></i> Delete Period
+                            </button>
                         </div>
                     </div>
+
+                    <!-- Delete Modal -->
+                    <div class="modal fade" id="deleteModal" tabindex="-1" wire:model="showDeleteModal">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Hapus Data Periode</h5>
+                                    <button type="button" class="btn-close" wire:click="closeDeleteModal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Tahun:</label>
+                                        <select wire:model="deleteYear" class="form-select">
+                                            <option value="">Pilih Tahun</option>
+                                            @foreach($years as $year)
+                                            <option value="{{ $year }}">{{ $year }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Bulan:</label>
+                                        <select wire:model="deleteMonth" class="form-select">
+                                            <option value="">Pilih Bulan</option>
+                                            @foreach($months as $month)
+                                            <option value="{{ $month }}">{{ $month }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="alert alert-warning">
+                                        Ini akan menghapus SEMUA data untuk periode yang dipilih di tab aktif ({{
+                                        ucfirst(str_replace('_', ' ', $activeTab)) }}). Tindakan ini tidak dapat
+                                        dibatalkan!
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        wire:click="closeDeleteModal">Batal</button>
+                                    <button type="button" class="btn btn-danger" wire:click="deleteCurrentFilterData"
+                                        wire:confirm="Yakin hapus data {{ $deleteYear }} {{ $deleteMonth }}?">
+                                        Hapus Data
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @if(session('message'))
+                    <div class="alert alert-{{ session('message_type', 'success') }} alert-dismissible fade show m-3"
+                        role="alert">
+                        {{ session('message') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    @endif
                     <div class="card-table">
                         <div id="pco-table">
                             <div class="table-responsive">
@@ -120,4 +167,37 @@
             </div>
         </div>
     </div>
+    <script>
+        document.addEventListener('livewire:initialized', () => {
+        Livewire.on('open-delete-modal', () => {
+            const oldBackdrop = document.getElementById('delete-modal-backdrop');
+            if (oldBackdrop) oldBackdrop.remove();
+
+            const modalEl = document.getElementById('deleteModal');
+            modalEl.classList.add('show');
+            modalEl.style.display = 'block';
+            document.body.classList.add('modal-open');
+
+            const backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            backdrop.id = 'delete-modal-backdrop';
+            document.body.appendChild(backdrop);
+        });
+
+        Livewire.on('close-delete-modal', () => {
+            const modalEl = document.getElementById('deleteModal');
+            modalEl.classList.remove('show');
+            modalEl.style.display = 'none';
+            document.body.classList.remove('modal-open');
+
+            const backdrop = document.getElementById('delete-modal-backdrop');
+            if (backdrop) backdrop.remove();
+        });
+
+        // tambah ini
+        Livewire.on('notify', (data) => {
+            console.log('notify fired:', data); // cek dulu di console
+        });
+    });
+    </script>
 </div>

@@ -4,37 +4,50 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\MasterSmpSubmaterial;
-use App\Models\MasterSmpScrap;
+use App\Models\MasterBf;
+use App\Models\MasterBfPciCoal;
+use App\Models\MasterBfQuality;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Livewire\Attributes\Url;
+use Livewire\Attributes\On;
 
-class SteelMakingMaster extends Component
+class BfMaster extends Component
 {
     use WithPagination;
 
-    public $activeTab = 'submaterial';
+    #[Url]
+    public $activeTab = 'data';
+    #[Url]
     public $search = '';
+    #[Url]
     public $yearFilter = '';
+
+    #[Url]
     public $perPage = 20;
 
     public $showDeleteModal = false;
     public $deleteYear = '';
     public $deleteMonth = '';
 
-    public function openDeleteModal()
+    public function updatedSearch()
     {
-        $this->showDeleteModal = true;
-        $this->deleteYear = $this->yearFilter ?: ($this->getYearsProperty()->first() ?? '');
-        $this->deleteMonth = '';
-        $this->dispatch('open-delete-modal'); // align with BfMaster
+        $this->resetPage('page_data');
+        $this->resetPage('page_pci');
+        $this->resetPage('page_quality');
     }
 
-    public function closeDeleteModal()
+    public function updatedYearFilter()
     {
-        $this->showDeleteModal = false;
-        $this->deleteYear = '';
-        $this->deleteMonth = '';
-        $this->dispatch('close-delete-modal'); // align with BfMaster
+        $this->resetPage('page_data');
+        $this->resetPage('page_pci');
+        $this->resetPage('page_quality');
+    }
+
+    public function updatedPerPage()
+    {
+        $this->resetPage('page_data');
+        $this->resetPage('page_pci');
+        $this->resetPage('page_quality');
     }
 
     public function deleteCurrentFilterData()
@@ -61,17 +74,21 @@ class SteelMakingMaster extends Component
         ];
 
         $fullMonth = strtolower($monthMap[$this->deleteMonth] ?? $this->deleteMonth);
-
         $deletedCount = 0;
 
         switch ($this->activeTab) {
-            case 'submaterial':
-                $deletedCount = MasterSmpSubmaterial::where('period_year', $this->deleteYear)
+            case 'data':
+                $deletedCount = MasterBf::where('period_year', $this->deleteYear)
                     ->whereRaw('LOWER(period_month) = ?', [$fullMonth])
                     ->delete();
                 break;
-            case 'scrap':
-                $deletedCount = MasterSmpScrap::where('period_year', $this->deleteYear)
+            case 'pci':
+                $deletedCount = MasterBfPciCoal::where('period_year', $this->deleteYear)
+                    ->whereRaw('LOWER(period_month) = ?', [$fullMonth])
+                    ->delete();
+                break;
+            case 'quality':
+                $deletedCount = MasterBfQuality::where('period_year', $this->deleteYear)
                     ->whereRaw('LOWER(period_month) = ?', [$fullMonth])
                     ->delete();
                 break;
@@ -84,27 +101,20 @@ class SteelMakingMaster extends Component
         $this->resetPage("page_{$this->activeTab}");
     }
 
-    public function updatedSearch()
+    public function openDeleteModal()
     {
-        $this->resetPage('page_submaterial');
-        $this->resetPage('page_scrap');
+        $this->showDeleteModal = true;
+        $this->deleteYear = $this->yearFilter ?: ($this->getYearsProperty()->first() ?? '');
+        $this->deleteMonth = '';
+        $this->dispatch('open-delete-modal'); // tambah ini
     }
 
-    public function getMonthsProperty()
+    public function closeDeleteModal()
     {
-        return collect(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
-    }
-
-    public function updatedYearFilter()
-    {
-        $this->resetPage('page_submaterial');
-        $this->resetPage('page_scrap');
-    }
-
-    public function updatedPerPage()
-    {
-        $this->resetPage('page_submaterial');
-        $this->resetPage('page_scrap');
+        $this->showDeleteModal = false;
+        $this->deleteYear = '';
+        $this->deleteMonth = '';
+        $this->dispatch('close-delete-modal'); // tambah ini
     }
 
     protected function paginateCollection($items, $perPage, $pageName)
@@ -124,11 +134,17 @@ class SteelMakingMaster extends Component
         );
     }
 
+    public function getMonthsProperty()
+    {
+        return collect(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
+    }
+
     public function getYearsProperty()
     {
         $years = collect();
-        $years = $years->merge(MasterSmpSubmaterial::distinct()->orderByDesc('period_year')->pluck('period_year'));
-        $years = $years->merge(MasterSmpScrap::distinct()->orderByDesc('period_year')->pluck('period_year'));
+        $years = $years->merge(MasterBf::distinct()->orderByDesc('period_year')->pluck('period_year'));
+        $years = $years->merge(MasterBfPciCoal::distinct()->orderByDesc('period_year')->pluck('period_year'));
+        $years = $years->merge(MasterBfQuality::distinct()->orderByDesc('period_year')->pluck('period_year'));
         return $years->unique()->values()->sortDesc()->values();
     }
 
@@ -139,23 +155,25 @@ class SteelMakingMaster extends Component
 
     public function render()
     {
-        $submaterialData = $this->getSubmaterialDataProperty();
-        $scrapData = $this->getScrapDataProperty();
+        $bfData = $this->getBfDataProperty();
+        $pciCoal = $this->getPciCoalProperty();
+        $bfQuality = $this->getBfQualityProperty();
         $years = $this->getYearsProperty();
         $months = $this->getMonthsProperty();
 
-        return view('livewire.steel-making-master', [
-            'submaterialData' => $submaterialData,
-            'scrapData' => $scrapData,
+        return view('livewire.bf-master', [
+            'bfData' => $bfData,
+            'pciCoal' => $pciCoal,
+            'bfQuality' => $bfQuality,
             'years' => $years,
             'months' => $months,
             'activeTab' => $this->activeTab
         ]);
     }
 
-    public function getSubmaterialDataProperty()
+    public function getBfDataProperty()
     {
-        $rawData = MasterSmpSubmaterial::query();
+        $rawData = MasterBf::query();
 
         if (!empty($this->search)) {
             $rawData->where(function ($q) {
@@ -163,13 +181,15 @@ class SteelMakingMaster extends Component
                     ->orWhere('period_year', 'like', '%' . $this->search . '%')
                     ->orWhere('classification', 'like', '%' . $this->search . '%')
                     ->orWhere('sub_class', 'like', '%' . $this->search . '%')
-                    ->orWhere('unit', 'like', '%' . $this->search . '%');
+                    ->orWhere('sub_subclass', 'like', '%' . $this->search . '%');
             });
         }
 
         if (!empty($this->yearFilter)) {
             $rawData->where('period_year', $this->yearFilter);
         }
+
+
 
         $rawData = $rawData->get();
 
@@ -196,7 +216,7 @@ class SteelMakingMaster extends Component
                 $record->plant,
                 $record->classification,
                 $record->sub_class,
-                $record->unit,
+                $record->sub_subclass,
             ]);
         });
 
@@ -207,8 +227,8 @@ class SteelMakingMaster extends Component
                 'Plant' => $first->plant,
                 'Year' => $first->period_year,
                 'Classification' => $first->classification,
-                'SubClass' => $first->sub_class,
-                'Unit' => $first->unit,
+                'Sub Class' => $first->sub_class,
+                'Sub Subclass' => $first->sub_subclass,
             ];
 
             foreach (array_values($monthMap) as $abbr) {
@@ -231,29 +251,32 @@ class SteelMakingMaster extends Component
                 str_contains(strtolower($row['Plant'] ?? ''), $search) ||
                 str_contains(strtolower($row['Year'] ?? ''), $search) ||
                 str_contains(strtolower($row['Classification'] ?? ''), $search) ||
-                str_contains(strtolower($row['SubClass'] ?? ''), $search) ||
-                str_contains(strtolower($row['Unit'] ?? ''), $search);
+                str_contains(strtolower($row['Sub Class'] ?? ''), $search) ||
+                str_contains(strtolower($row['Sub Subclass'] ?? ''), $search);
         });
 
-        return $this->paginateCollection($filtered, $this->perPage, 'page_submaterial');
+        return $this->paginateCollection($filtered, $this->perPage, 'page_data');
     }
 
-    public function getScrapDataProperty()
+    public function getPciCoalProperty()
     {
-        $rawData = MasterSmpScrap::query();
+        $rawData = MasterBfPciCoal::query();
 
         if (!empty($this->search)) {
             $rawData->where(function ($q) {
                 $q->where('plant', 'like', '%' . $this->search . '%')
                     ->orWhere('period_year', 'like', '%' . $this->search . '%')
-                    ->orWhere('category', 'like', '%' . $this->search . '%')
-                    ->orWhere('sub_category', 'like', '%' . $this->search . '%');
+                    ->orWhere('item', 'like', '%' . $this->search . '%')
+                    ->orWhere('brand', 'like', '%' . $this->search . '%')
+                    ->orWhere('sub_brand', 'like', '%' . $this->search . '%');
             });
         }
 
         if (!empty($this->yearFilter)) {
             $rawData->where('period_year', $this->yearFilter);
         }
+
+
 
         $rawData = $rawData->get();
 
@@ -274,14 +297,13 @@ class SteelMakingMaster extends Component
             'december' => 'Dec',
         ];
 
-        // group by category / sub_category / unit so we get one pivot row per scrap category
         $grouped = $rawData->groupBy(function ($record) {
             return implode('|', [
                 $record->period_year,
                 $record->plant,
-                $record->category,
-                $record->sub_category,
-                $record->unit,
+                $record->item,
+                $record->brand,
+                $record->sub_brand,
             ]);
         });
 
@@ -291,9 +313,9 @@ class SteelMakingMaster extends Component
             $row = [
                 'Plant' => $first->plant,
                 'Year' => $first->period_year,
-                'Category' => $first->category,
-                'SubCategory' => $first->sub_category,
-                'Unit' => $first->unit,
+                'Item' => $first->item,
+                'Brand' => $first->brand,
+                'Sub Brand' => $first->sub_brand,
             ];
 
             foreach (array_values($monthMap) as $abbr) {
@@ -315,11 +337,98 @@ class SteelMakingMaster extends Component
             return empty($search) ||
                 str_contains(strtolower($row['Plant'] ?? ''), $search) ||
                 str_contains(strtolower($row['Year'] ?? ''), $search) ||
-                str_contains(strtolower($row['Category'] ?? ''), $search) ||
-                str_contains(strtolower($row['SubCategory'] ?? ''), $search) ||
-                str_contains(strtolower($row['Unit'] ?? ''), $search);
+                str_contains(strtolower($row['Item'] ?? ''), $search) ||
+                str_contains(strtolower($row['Brand'] ?? ''), $search) ||
+                str_contains(strtolower($row['Sub Brand'] ?? ''), $search);
         });
 
-        return $this->paginateCollection($filtered, $this->perPage, 'page_scrap');
+        return $this->paginateCollection($filtered, $this->perPage, 'page_pci');
+    }
+
+    public function getBfQualityProperty()
+    {
+        $rawData = MasterBfQuality::query();
+
+        if (!empty($this->search)) {
+            $rawData->where(function ($q) {
+                $q->where('plant', 'like', '%' . $this->search . '%')
+                    ->orWhere('period_year', 'like', '%' . $this->search . '%')
+                    ->orWhere('classification', 'like', '%' . $this->search . '%')
+                    ->orWhere('sub_class', 'like', '%' . $this->search . '%')
+                    ->orWhere('sub_subclass', 'like', '%' . $this->search . '%');
+            });
+        }
+
+        if (!empty($this->yearFilter)) {
+            $rawData->where('period_year', $this->yearFilter);
+        }
+
+
+
+        $rawData = $rawData->get();
+
+        $pivoted = [];
+
+        $monthMap = [
+            'january' => 'Jan',
+            'february' => 'Feb',
+            'march' => 'Mar',
+            'april' => 'Apr',
+            'may' => 'May',
+            'june' => 'Jun',
+            'july' => 'Jul',
+            'august' => 'Aug',
+            'september' => 'Sep',
+            'october' => 'Oct',
+            'november' => 'Nov',
+            'december' => 'Dec',
+        ];
+
+        $grouped = $rawData->groupBy(function ($record) {
+            return implode('|', [
+                $record->period_year,
+                $record->plant,
+                $record->classification,
+                $record->sub_class,
+                $record->sub_subclass,
+            ]);
+        });
+
+        foreach ($grouped as $records) {
+            $first = $records->first();
+
+            $row = [
+                'Plant' => $first->plant,
+                'Year' => $first->period_year,
+                'Classification' => $first->classification,
+                'Sub Class' => $first->sub_class,
+                'Sub Subclass' => $first->sub_subclass,
+            ];
+
+            foreach (array_values($monthMap) as $abbr) {
+                $row[$abbr] = 0;
+            }
+
+            foreach ($records as $record) {
+                $monthKey = strtolower($record->period_month);
+                if (isset($monthMap[$monthKey])) {
+                    $row[$monthMap[$monthKey]] = $record->quantity;
+                }
+            }
+
+            $pivoted[] = $row;
+        }
+
+        $filtered = collect($pivoted)->filter(function ($row) {
+            $search = strtolower($this->search);
+            return empty($search) ||
+                str_contains(strtolower($row['Plant'] ?? ''), $search) ||
+                str_contains(strtolower($row['Year'] ?? ''), $search) ||
+                str_contains(strtolower($row['Classification'] ?? ''), $search) ||
+                str_contains(strtolower($row['Sub Class'] ?? ''), $search) ||
+                str_contains(strtolower($row['Sub Subclass'] ?? ''), $search);
+        });
+
+        return $this->paginateCollection($filtered, $this->perPage, 'page_quality');
     }
 }
