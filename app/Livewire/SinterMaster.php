@@ -5,6 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\MasterSinter;
+use Livewire\Attributes\Url;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class SinterMaster extends Component

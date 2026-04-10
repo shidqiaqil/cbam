@@ -10,4 +10,9 @@
     body {
         font-feature-settings: "cv03", "cv04", "cv11";
     }
+
+    .tooltip-wide .tooltip-inner {
+        max-width: 400px;
+        white-space: normal;
+    }
 </style>

@@ -209,6 +209,8 @@ class EnergyMaster extends Component
 
             $row = [
                 'Plant' => $first->plant,
+                'PlantCode' => $first->plant_code ?? '',
+                'PlantName' => $first->plant_name ?? '',
                 'Year' => $first->period_year,
                 'Criteria' => $first->criteria,
                 'EnergyName' => $first->energy_name,

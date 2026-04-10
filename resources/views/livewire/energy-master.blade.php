@@ -111,6 +111,8 @@
                                             <th class="w-1">No.</th>
                                             <th>Plant</th>
                                             <th>Year</th>
+                                            <th>Plant Code</th>
+                                            <th>Plant Name</th>
                                             <th>Criteria</th>
                                             <th>Energy Name</th>
                                             <th>Unit</th>
@@ -134,6 +136,8 @@
                                                 1 }}</td>
                                             <td class="fw-bold">{{ $row['Plant'] ?? '-' }}</td>
                                             <td>{{ $row['Year'] }}</td>
+                                            <td>{{ $row['PlantCode'] }}</td>
+                                            <td>{{ $row['PlantName'] }}</td>
                                             <td>{{ $row['Criteria'] }}</td>
                                             <td>{{ $row['EnergyName'] }}</td>
                                             <td>{{ $row['Unit'] }}</td>
@@ -190,6 +194,7 @@
                                             <th class="w-1">No.</th>
                                             <th>Plant</th>
                                             <th>Year</th>
+
                                             <th>En Name</th>
                                             <th>Use Product</th>
                                             <th>UOM</th>
