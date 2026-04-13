@@ -1,7 +1,6 @@
 <div class="page-body">
     <div class="container-xl">
         <div class="row row-cards">
-
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header">
@@ -26,22 +25,26 @@
                                     data-bs-toggle="tab" wire:click="$set('activeTab', 'chp')">CHP - Power Plant</a>
                             </li>
                         </ul>
-                    </div>
+                    </div>{{-- /card-header --}}
+
                     <div class="card-body">
                         <div class="tab-content">
+
+                            {{-- ====================================================== --}}
+                            {{-- TAB: STEEL SLAB --}}
+                            {{-- ====================================================== --}}
                             <div class="tab-pane {{ $activeTab === 'steel-slab' ? 'active show' : '' }}"
                                 id="tabs-steel-slab">
                                 <div class="row g-3">
-                                    <!-- NEW: Page-wide filters before Data Energy/Emission -->
-                                    <div class="col-12 mb-4"
-                                        style="border: 0.5px solid #b5d4f4; border-radius: 8px; background: #f0f6ff; padding: 1rem 1.25rem;">
+
+                                    {{-- FILTER --}}
+                                    <div class="col-12 mb-4 filter-section">
                                         <div class="d-flex align-items-center gap-2 mb-3">
                                             <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                                                 <path d="M2 4h12M4 8h8M6 12h4" stroke="#378ADD" stroke-width="1.5"
                                                     stroke-linecap="round" />
                                             </svg>
-                                            <span
-                                                style="font-size: 12px; font-weight: 500; color: #378ADD; letter-spacing: 0.05em; text-transform: uppercase;">Filter</span>
+                                            <span class="filter-label">Filter</span>
                                         </div>
                                         @if($availableYears->isNotEmpty())
                                         <div class="row g-2">
@@ -56,7 +59,7 @@
                                             </div>
                                             <div class="col-md-5">
                                                 <label class="form-label">Period</label>
-                                                <select wire:model.live.debounce.300ms="period" class="form-select" {{
+                                                <select wire:model.live="period" class="form-select" {{
                                                     empty($periodYear) ? 'disabled' : '' }}>
                                                     <option value="">Select Period</option>
                                                     <optgroup label="Monthly">
@@ -96,15 +99,18 @@
                                             </div>
                                         </div>
                                         @endif
-                                    </div>
-                                    <div class="col-md-6">
+                                    </div>{{-- /filter --}}
+
+                                    {{-- DATA ENERGY --}}
+                                    <div class="col-12 col-lg-6">
                                         <h5 class="mb-3">Data Energy</h5>
-                                        <!-- NEW: Energy Table 1 -->
+
+                                        {{-- Table 1 --}}
                                         <div class="table-responsive mb-4">
                                             <h6 class="mb-3 text-primary">Table 1</h6>
                                             @if($energyTableData->isEmpty())
                                             <div class="alert alert-info">
-                                                <i class="ti ti-info-circle"></i> Select year & period or <a
+                                                <i class="ti ti-info-circle"></i> Select year &amp; period or <a
                                                     href="/uploadfile">Upload Energy Data</a>.
                                             </div>
                                             @else
@@ -118,11 +124,11 @@
                                                 </thead>
                                                 <tbody>
                                                     @foreach($energyTableData as $row)
-                                                    <tr {{ $row['description']==='Total' ? 'class=table-active fw-bold'
-                                                        : '' }}>
+                                                    <tr @class(['table-active fw-bold'=> $row['description'] ===
+                                                        'Total'])>
                                                         <td>
                                                             {{ $row['description'] }}
-                                                            @if(isset($row['tooltip']))
+                                                            @if(!empty($row['tooltip']))
                                                             <span class="badge badge-sm bg-light text-primary ms-1"
                                                                 data-bs-toggle="tooltip" data-bs-placement="top"
                                                                 data-bs-html="true" data-bs-custom-class="tooltip-wide"
@@ -136,14 +142,15 @@
                                                 </tbody>
                                             </table>
                                             @endif
-                                        </div>
-                                        <!-- Table 2 -->
+                                        </div>{{-- /table-1 --}}
+
+                                        {{-- Table 2 --}}
                                         <div class="table-responsive mb-4">
                                             <h6 class="mb-3 text-primary">Table 2</h6>
                                             @if($energyTableDataTable2->isEmpty())
                                             <div class="alert alert-info">
-                                                <i class="ti ti-info-circle"></i> Select year & period to see Table 2
-                                                data.
+                                                <i class="ti ti-info-circle"></i> Select year &amp; period to see Table
+                                                2 data.
                                             </div>
                                             @else
                                             <table class="table table-sm table-bordered">
@@ -156,11 +163,11 @@
                                                 </thead>
                                                 <tbody>
                                                     @foreach($energyTableDataTable2 as $row)
-                                                    <tr {{ $row['description']==='Total Purchase Electricity'
-                                                        ? 'class=table-active fw-bold' : '' }}>
+                                                    <tr @class(['table-active fw-bold'=> $row['description'] === 'Total
+                                                        Purchase Electricity'])>
                                                         <td>
                                                             {{ $row['description'] }}
-                                                            @if(isset($row['tooltip']))
+                                                            @if(!empty($row['tooltip']))
                                                             <span class="badge badge-sm bg-light text-primary ms-1"
                                                                 data-bs-toggle="tooltip" data-bs-placement="top"
                                                                 data-bs-html="true" data-bs-custom-class="tooltip-wide"
@@ -174,14 +181,15 @@
                                                 </tbody>
                                             </table>
                                             @endif
-                                        </div>
-                                        <!-- Table 3 -->
+                                        </div>{{-- /table-2 --}}
+
+                                        {{-- Table 3 --}}
                                         <div class="table-responsive mb-4">
                                             <h6 class="mb-3 text-primary">Table 3</h6>
                                             @if($energyTableDataTable3->isEmpty())
                                             <div class="alert alert-info">
-                                                <i class="ti ti-info-circle"></i> Select year & period to see Table 3
-                                                data.
+                                                <i class="ti ti-info-circle"></i> Select year &amp; period to see Table
+                                                3 data.
                                             </div>
                                             @else
                                             <table class="table table-sm table-bordered">
@@ -194,11 +202,11 @@
                                                 </thead>
                                                 <tbody>
                                                     @foreach($energyTableDataTable3 as $row)
-                                                    <tr {{ $row['description']==='Total' ? 'class=table-active fw-bold'
-                                                        : '' }}>
+                                                    <tr @class(['table-active fw-bold'=> $row['description'] ===
+                                                        'Total'])>
                                                         <td>
                                                             {{ $row['description'] }}
-                                                            @if(isset($row['tooltip']))
+                                                            @if(!empty($row['tooltip']))
                                                             <span class="badge badge-sm bg-light text-primary ms-1"
                                                                 data-bs-toggle="tooltip" data-bs-placement="top"
                                                                 data-bs-html="true" data-bs-custom-class="tooltip-wide"
@@ -212,14 +220,15 @@
                                                 </tbody>
                                             </table>
                                             @endif
-                                        </div>
-                                        <!-- NEW: Table 4 -->
+                                        </div>{{-- /table-3 --}}
+
+                                        {{-- Table 4 --}}
                                         <div class="table-responsive mb-4">
                                             <h6 class="mb-3 text-primary">Table 4</h6>
                                             @if($energyTableDataTable4->isEmpty())
                                             <div class="alert alert-info">
-                                                <i class="ti ti-info-circle"></i> Select year & period to see Table 4
-                                                data.
+                                                <i class="ti ti-info-circle"></i> Select year &amp; period to see Table
+                                                4 data.
                                             </div>
                                             @else
                                             <table class="table table-sm table-bordered">
@@ -232,11 +241,11 @@
                                                 </thead>
                                                 <tbody>
                                                     @foreach($energyTableDataTable4 as $row)
-                                                    <tr {{ $row['description']==='Total Purchase Steam'
-                                                        ? 'class=table-active fw-bold' : '' }}>
+                                                    <tr @class(['table-active fw-bold'=> $row['description'] === 'Total
+                                                        Purchase Steam'])>
                                                         <td>
                                                             {{ $row['description'] }}
-                                                            @if(isset($row['tooltip']))
+                                                            @if(!empty($row['tooltip']))
                                                             <span class="badge badge-sm bg-light text-primary ms-1"
                                                                 data-bs-toggle="tooltip" data-bs-placement="top"
                                                                 data-bs-html="true" data-bs-custom-class="tooltip-wide"
@@ -250,15 +259,14 @@
                                                 </tbody>
                                             </table>
                                             @endif
+                                        </div>{{-- /table-4 --}}
 
-                                        </div>
-
-                                        <!-- NEW: Export Table -->
+                                        {{-- Export --}}
                                         <div class="table-responsive mb-4">
                                             <h6 class="mb-3 text-primary">Export</h6>
                                             @if($energyTableDataExport->isEmpty())
                                             <div class="alert alert-info">
-                                                <i class="ti ti-info-circle"></i> Select year & period to see Export
+                                                <i class="ti ti-info-circle"></i> Select year &amp; period to see Export
                                                 data.
                                             </div>
                                             @else
@@ -275,29 +283,29 @@
                                                     <tr>
                                                         <td>
                                                             {{ $row['description'] }}
-                                                            @if(isset($row['tooltip']) && !empty($row['tooltip']))
+                                                            @if(!empty($row['tooltip']))
                                                             <span class="badge badge-sm bg-light text-primary ms-1"
                                                                 data-bs-toggle="tooltip" data-bs-placement="top"
                                                                 data-bs-html="true" data-bs-custom-class="tooltip-wide"
                                                                 title="{{ $row['tooltip'] }}">i</span>
                                                             @endif
                                                         </td>
-                                                        <td class="text-end">{{ number_format($row['quantity'], 2)
-                                                            }}</td>
+                                                        <td class="text-end">{{ number_format($row['quantity'], 2) }}
+                                                        </td>
                                                         <td class="text-end">Nm3</td>
                                                     </tr>
                                                     @endforeach
                                                 </tbody>
                                             </table>
                                             @endif
-                                        </div>
+                                        </div>{{-- /export --}}
 
-                                        <!-- NEW: Import Table -->
+                                        {{-- Import --}}
                                         <div class="table-responsive mb-4">
                                             <h6 class="mb-3 text-primary">Import</h6>
                                             @if($energyTableDataImport->isEmpty())
                                             <div class="alert alert-info">
-                                                <i class="ti ti-info-circle"></i> Select year & period to see Import
+                                                <i class="ti ti-info-circle"></i> Select year &amp; period to see Import
                                                 data.
                                             </div>
                                             @else
@@ -314,7 +322,7 @@
                                                     <tr>
                                                         <td>
                                                             {{ $row['description'] }}
-                                                            @if(isset($row['tooltip']) && !empty($row['tooltip']))
+                                                            @if(!empty($row['tooltip']))
                                                             <span class="badge badge-sm bg-light text-primary ms-1"
                                                                 data-bs-toggle="tooltip" data-bs-placement="top"
                                                                 data-bs-html="true" data-bs-custom-class="tooltip-wide"
@@ -329,14 +337,14 @@
                                                 </tbody>
                                             </table>
                                             @endif
-                                        </div>
+                                        </div>{{-- /import --}}
 
-                                        <!-- NEW: Export Electricity Table -->
+                                        {{-- Export Electricity --}}
                                         <div class="table-responsive mb-4">
                                             <h6 class="mb-3 text-primary">Export Electricity</h6>
                                             @if($energyTableDataExportElectricity->isEmpty())
                                             <div class="alert alert-info">
-                                                <i class="ti ti-info-circle"></i> Select year & period to see Export
+                                                <i class="ti ti-info-circle"></i> Select year &amp; period to see Export
                                                 Electricity data.
                                             </div>
                                             @else
@@ -353,7 +361,7 @@
                                                     <tr>
                                                         <td>
                                                             {{ $row['description'] }}
-                                                            @if(isset($row['tooltip']))
+                                                            @if(!empty($row['tooltip']))
                                                             <span class="badge badge-sm bg-light text-primary ms-1"
                                                                 data-bs-toggle="tooltip" data-bs-placement="top"
                                                                 data-bs-html="true" data-bs-custom-class="tooltip-wide"
@@ -362,89 +370,83 @@
                                                         </td>
                                                         <td class="text-end">{{ number_format($row['quantity'], 2) }}
                                                         </td>
-                                                        <td class="text-end">{{ $loop->first ? 'kWh' : ($loop->last ?
-                                                            'MWh' : 'kWh') }}</td>
+                                                        <td class="text-end">
+                                                            {{ $row['description'] === 'Reverse Power/1000' ? 'MWh' :
+                                                            'kWh' }}
+                                                        </td>
                                                     </tr>
                                                     @endforeach
                                                 </tbody>
                                             </table>
                                             @endif
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h5 class="mb-3">Data Emission</h5>
+                                        </div>{{-- /export-electricity --}}
+
+                                    </div>{{-- /col data energy --}}
+
+                                    {{-- DATA EMISSION --}}
+                                    <div class="col-12 col-lg-6">
+                                        <h5 class="mb-3">Data Emission (CO2e)</h5>
                                         <div class="table-responsive mb-4">
-                                            <h6 class="mb-3 text-primary">Table 1</h6>
+                                            <h6 class="mb-3 text-primary">Scope 1 &amp; 2 Summary</h6>
                                             @if($energyTableData->isEmpty())
                                             <div class="alert alert-info">
-                                                <i class="ti ti-info-circle"></i> Select year & period or <a
-                                                    href="/uploadfile">Upload Energy Data</a>.
+                                                <i class="ti ti-info-circle"></i> Select year &amp; period to see
+                                                emission estimates.
                                             </div>
                                             @else
+                                            @php
+                                            $scope1 = $energyTableData->sum('power') * 0.0004;
+                                            $scope2 = $energyTableData->sum('power') * 0.0001;
+                                            $totalCo2 = $scope1 + $scope2;
+                                            @endphp
                                             <table class="table table-sm table-bordered">
                                                 <thead class="table-light">
                                                     <tr>
-                                                        <th>Description</th>
-                                                        <th>Power</th>
-                                                        <th>Unit</th>
+                                                        <th>Scope</th>
+                                                        <th>CO2e (tCO2e)</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    @foreach($energyTableData as $row)
-                                                    <tr {{ $row['description']==='Total' ? 'class=table-active fw-bold'
-                                                        : '' }}>
-                                                        <td>
-                                                            {{ $row['description'] }}
-                                                            @if(isset($row['tooltip']))
-                                                            <span class="badge badge-sm bg-light text-primary ms-1"
-                                                                data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                data-bs-html="true"
-                                                                title="{{ $row['tooltip'] }}">i</span>
-                                                            @endif
-                                                        </td>
-                                                        <td class="text-end">{{ number_format($row['power'], 2) }}</td>
-                                                        <td class="text-end">kWh</td>
+                                                    <tr>
+                                                        <td>Scope 1</td>
+                                                        <td class="text-end">{{ number_format($scope1, 2) }}</td>
                                                     </tr>
-                                                    @endforeach
+                                                    <tr>
+                                                        <td>Scope 2</td>
+                                                        <td class="text-end">{{ number_format($scope2, 2) }}</td>
+                                                    </tr>
+                                                    <tr class="table-active fw-bold">
+                                                        <td>Total</td>
+                                                        <td class="text-end">{{ number_format($totalCo2, 2) }}</td>
+                                                    </tr>
                                                 </tbody>
                                             </table>
+                                            <small class="text-muted">Demo factors. Update with actual EF from
+                                                regulation.</small>
                                             @endif
                                         </div>
+                                    </div>{{-- /col data emission --}}
 
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- Other tabs unchanged -->
+                                </div>{{-- /row --}}
+                            </div>{{-- /tab-pane steel-slab --}}
+
+                            {{-- ====================================================== --}}
+                            {{-- TAB: STEEL PLATE --}}
+                            {{-- ====================================================== --}}
                             <div class="tab-pane {{ $activeTab === 'steel-plate' ? 'active show' : '' }}"
                                 id="tabs-steel-plate">
-                                <h4>Steel Plate</h4>
-                                <div>
-                                    Konten untuk Steel Plate. Tambahkan form atau tabel konfigurasi di sini.
-                                </div>
-                            </div>
-                            <div class="tab-pane {{ $activeTab === 'steel-hrc' ? 'active show' : '' }}"
-                                id="tabs-steel-hrc">
-                                <h4>Steel HRC</h4>
-                                <div>
-                                    Konten untuk Steel HRC. Tambahkan form atau tabel konfigurasi di sini.
-                                </div>
-                            </div>
-                            <div class="tab-pane {{ $activeTab === 'chp' ? 'active show' : '' }}" id="tabs-chp">
                                 <div class="row g-3">
-                                    <!-- Filter section (same as Steel Slab) -->
-                                    <div class="col-12 mb-4"
-                                        style="border: 0.5px solid #b5d4f4; border-radius: 8px; background: #f0f6ff; padding: 1rem 1.25rem;">
+                                    <div class="col-12 mb-4 filter-section">
                                         <div class="d-flex align-items-center gap-2 mb-3">
                                             <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                                                 <path d="M2 4h12M4 8h8M6 12h4" stroke="#378ADD" stroke-width="1.5"
                                                     stroke-linecap="round" />
                                             </svg>
-                                            <span
-                                                style="font-size: 12px; font-weight: 500; color: #378ADD; letter-spacing: 0.05em; text-transform: uppercase;">Filter</span>
+                                            <span class="filter-label">Filter</span>
                                         </div>
                                         @if($availableYears->isNotEmpty())
                                         <div class="row g-2">
-                                            <div class="col-md-5">
+                                            <div class="col-12 col-md-5">
                                                 <label class="form-label">Year</label>
                                                 <select wire:model.live="periodYear" class="form-select">
                                                     <option value="">Select Year</option>
@@ -453,9 +455,9 @@
                                                     @endforeach
                                                 </select>
                                             </div>
-                                            <div class="col-md-5">
+                                            <div class="col-12 col-md-5">
                                                 <label class="form-label">Period</label>
-                                                <select wire:model.live.debounce.300ms="period" class="form-select" {{
+                                                <select wire:model.live="period" class="form-select" {{
                                                     empty($periodYear) ? 'disabled' : '' }}>
                                                     <option value="">Select Period</option>
                                                     <optgroup label="Monthly">
@@ -481,41 +483,68 @@
                                                     <option value="yearly">Yearly</option>
                                                 </select>
                                             </div>
-                                            <div class="col-md-2">
+                                            <div class="col-12 col-md-2">
                                                 <label class="form-label">&nbsp;</label>
                                                 <div class="mt-1">
                                                     @if(empty($periodYear) || empty($period))
-                                                    <small class="text-muted">Select year and period to see CHP table
-                                                        data below</small>
+                                                    <small class="text-muted">Select year and period</small>
+                                                    @else
+                                                    <span class="badge bg-blue-lt">Data for {{ strtoupper($period) }} {{
+                                                        $periodYear }}</span>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
+                                        @endif
+                                    </div>{{-- /filter --}}
+                                    <div class="col-12">
+                                        <h5 class="mb-3">Steel Plate Config</h5>
+                                        <div class="alert alert-info">
+                                            Steel Plate tables coming soon.
+                                        </div>
                                     </div>
+                                </div>{{-- /row --}}
+                            </div>{{-- /tab-pane steel-plate --}}
 
-                                </div>
-                            </div>
+                            {{-- ====================================================== --}}
+                            {{-- TAB: STEEL HRC --}}
+                            {{-- ====================================================== --}}
+                            <div class="tab-pane {{ $activeTab === 'steel-hrc' ? 'active show' : '' }}"
+                                id="tabs-steel-hrc">
+                                <h4>Steel HRC</h4>
+                                <p>Konten untuk Steel HRC. Tambahkan form atau tabel konfigurasi di sini.</p>
+                            </div>{{-- /tab-pane steel-hrc --}}
 
-                            <!-- NEW: Bootstrap tooltip initializer -->
-                            <script>
-                                document.addEventListener('livewire:load', function () {
-        initTooltips();
-    });
-    document.addEventListener('livewire:update', function () {
-        initTooltips();
-    });
+                            {{-- ====================================================== --}}
+                            {{-- TAB: CHP --}}
+                            {{-- ====================================================== --}}
+                            <div class="tab-pane {{ $activeTab === 'chp' ? 'active show' : '' }}" id="tabs-chp">
+                                <h4>CHP - Power Plant</h4>
+                                <p>Konten untuk CHP. Tambahkan form atau tabel konfigurasi di sini.</p>
+                            </div>{{-- /tab-pane chp --}}
+
+                        </div>{{-- /tab-content --}}
+                    </div>{{-- /card-body --}}
+                </div>{{-- /card --}}
+            </div>{{-- /col-md-12 --}}
+        </div>{{-- /row --}}
+    </div>{{-- /container-xl --}}
+</div>{{-- /page-body --}}
+
+@push('scripts')
+<script>
+    document.addEventListener('livewire:navigated', () => initTooltips());
+    document.addEventListener('livewire:updated',   () => initTooltips());
+
     function initTooltips() {
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl, {
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+            bootstrap.Tooltip.getOrCreateInstance(el, {
                 boundary: 'window',
-                popperConfig: {
-                    modifiers: [{
-                        name: 'preventOverflow',
-                        options: { boundary: 'window' }
-                    }]
-                }
+                html: true,
             });
         });
     }
-                            </script>
-                        </div>
+
+    initTooltips();
+</script>
+@endpush
