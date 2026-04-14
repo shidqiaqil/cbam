@@ -31,9 +31,9 @@ class ConfigurationData extends Component
     protected array $energyRows = [
         [
             'description' => 'BF Generation',
-            'tooltip'     => '<ul><li>Quantity from Master_energy_data where plant_code = IBN000, plant_name = Blast Furnace Plant, criteria= PRODUCTION, energy_name = AIR BLAST</li></ul>',
+            'tooltip'     => '<ul><li>Quantity from Master_energy_data where plant_code = IBN000, plant_name = Blast Furnace Plant, criteria= PRODUCTION, energy_name = POWER</li></ul>',
             'conditions'  => [
-                ['plant_code' => 'IBN000', 'plant_name' => 'Blast Furnace Plant', 'criteria' => 'PRODUCTION', 'energy_name' => 'AIR BLAST']
+                ['plant_code' => 'IBN000', 'plant_name' => 'Blast Furnace Plant', 'criteria' => 'PRODUCTION', 'energy_name' => 'POWER']
             ]
         ],
         [
@@ -78,7 +78,7 @@ class ConfigurationData extends Component
                 ['plant_code' => 'IBN000', 'plant_name' => 'Blast Furnace Plant',                                 'energy_name' => 'POWER', 'criteria' => 'CONSUMPTION'],
                 ['plant_code' => 'IEA000', 'plant_name' => 'Steel making',                                        'energy_name' => 'POWER', 'criteria' => 'CONSUMPTION'],
                 ['plant_code' => 'IEE000', 'plant_name' => 'Continuous Casting',                                  'energy_name' => 'POWER', 'criteria' => 'CONSUMPTION'],
-                ['plant_code' => 'ITC110', 'plant_name' => 'Water-Fresh water from KTI',                          'energy_name' => 'POWER', 'criteria' => 'CONSUMPTION'],
+                ['plant_code' => 'ITC110', 'plant_name' => 'Water-Fresh water from KTI',                             'energy_name' => 'POWER', 'criteria' => 'CONSUMPTION'],
                 ['plant_code' => 'ITC120', 'plant_name' => 'Water-Fresh water from recycling facility',           'energy_name' => 'POWER', 'criteria' => 'CONSUMPTION'],
                 ['plant_code' => 'ITD120', 'plant_name' => 'Utility- By Product Gas distribution',                'energy_name' => 'POWER', 'criteria' => 'CONSUMPTION'],
                 ['plant_code' => 'ITB110', 'plant_name' => 'Electric Power System-incoming and distribution',    'energy_name' => 'POWER', 'criteria' => 'CONSUMPTION'],
@@ -133,7 +133,7 @@ class ConfigurationData extends Component
             'description' => 'SMP & CCP + Energy',
             'tooltip'     => '<ul><li>Sum(Quantity) for STEAM CONSUMPTION at Steel making and Utility- By Product Gas distribution</li></ul>',
             'conditions'  => [
-                ['plant_code' => 'IEA000', 'plant_name' => 'Steel making',                       'energy_name' => 'STEAM', 'criteria' => 'CONSUMPTION'],
+                ['plant_code' => 'IEA000', 'plant_name' => 'Steel making', 'energy_name' => 'STEAM', 'criteria' => 'CONSUMPTION'],
                 ['plant_code' => 'ITD120', 'plant_name' => 'Utility- By Product Gas distribution', 'energy_name' => 'STEAM', 'criteria' => 'CONSUMPTION']
             ]
         ]
@@ -375,11 +375,18 @@ class ConfigurationData extends Component
 
         $data = $this->buildTableData($this->energyRows, 'power');
 
-        // Append Total row
+        // Append Total row with formula: BF Gen + PLN + KPE - Plate Mill - COP
+        $bf = $data[0]['power'] ?? 0;
+        $pln = $data[1]['power'] ?? 0;
+        $kpe = $data[2]['power'] ?? 0;
+        $plate = $data[3]['power'] ?? 0;
+        $cop = $data[4]['power'] ?? 0;
+        $total = $bf + $pln + $kpe - $plate - $cop;
+
         $data->push([
             'description' => 'Total',
-            'tooltip'     => 'Sum of all rows above',
-            'power'       => round($data->sum('power'), 2),
+            'tooltip'     => 'BF Generation + Purchase Electricity from PLN + Purchase (KPE Power) - Plate Mill Electricity Consumption - COP Electricity Consumption',
+            'power'       => round($total, 2),
         ]);
 
         return $data;

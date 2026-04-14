@@ -197,6 +197,8 @@ class EnergyMaster extends Component
         $grouped = $rawData->groupBy(function ($record) {
             return implode('|', [
                 $record->period_year,
+                $record->plant_code,
+                $record->plant_name,
                 $record->plant,
                 $record->criteria,
                 $record->energy_name,
