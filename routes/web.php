@@ -14,3 +14,4 @@ Route::get('/energymaster', \App\Livewire\EnergyMaster::class)->name('energymast
 Route::get('/sintermaster', \App\Livewire\SinterMaster::class)->name('sintermaster');
 Route::get('/steelmakingmaster', \App\Livewire\SteelMakingMaster::class)->name('steelmakingmaster');
 Route::get('/bfmaster', \App\Livewire\BfMaster::class)->name('bfmaster');
+Route::get('/configurationdata-chp', \App\Livewire\ConfigurationDataCHP::class)->name('configurationdata-chp');

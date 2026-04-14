@@ -519,8 +519,7 @@
                             {{-- TAB: CHP --}}
                             {{-- ====================================================== --}}
                             <div class="tab-pane {{ $activeTab === 'chp' ? 'active show' : '' }}" id="tabs-chp">
-                                <h4>CHP - Power Plant</h4>
-                                <p>Konten untuk CHP. Tambahkan form atau tabel konfigurasi di sini.</p>
+                                @livewire('configuration-data-chp')
                             </div>{{-- /tab-pane chp --}}
 
                         </div>{{-- /tab-content --}}
