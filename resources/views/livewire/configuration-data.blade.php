@@ -511,8 +511,7 @@
                             {{-- ====================================================== --}}
                             <div class="tab-pane {{ $activeTab === 'steel-hrc' ? 'active show' : '' }}"
                                 id="tabs-steel-hrc">
-                                <h4>Steel HRC</h4>
-                                <p>Konten untuk Steel HRC. Tambahkan form atau tabel konfigurasi di sini.</p>
+                                @livewire('configuration-data-hrc')
                             </div>{{-- /tab-pane steel-hrc --}}
 
                             {{-- ====================================================== --}}
