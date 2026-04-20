@@ -50,8 +50,6 @@ class ConfigurationDataCHP extends Component
 
     // =========================================================================
     // ROW DEFINITIONS
-    // Setiap entry mendefinisikan 1 baris tabel beserta kondisi query-nya.
-    // Key 'formula' opsional: string ekspresi PHP yang diterapkan ke raw value.
     // =========================================================================
 
     /** Table 1 – Fuel Input (Quantity) */
@@ -113,10 +111,6 @@ class ConfigurationDataCHP extends Component
     // PERIOD HELPERS
     // =========================================================================
 
-    /**
-     * Mengembalikan array nama bulan (lowercase) berdasarkan nilai $period.
-     * Contoh: 'q1' → ['january', 'february', 'march'], 'jan' → ['january']
-     */
     private function resolveMonths(): array
     {
         $monthMap = [
@@ -153,10 +147,6 @@ class ConfigurationDataCHP extends Component
     // QUERY HELPERS
     // =========================================================================
 
-    /**
-     * Menjumlahkan quantity dari MasterEnergyData untuk 1 bulan
-     * berdasarkan satu atau lebih kondisi (OR antar kondisi).
-     */
     private function sumEnergyData(array $conditions, string $month): float
     {
         if (empty($conditions)) return 0.0;
@@ -179,9 +169,9 @@ class ConfigurationDataCHP extends Component
     }
 
     /**
-     * Membangun Collection baris tabel dari array definisi baris ($rowDefs).
-     * Setiap baris dijumlahkan lintas bulan sesuai periode yang dipilih.
-     * Jika ada key 'formula', formula string diterapkan ke raw value.
+     * Build table rows from row definitions.
+     * All values stored as raw floats — NO rounding here.
+     * Rounding only happens in the blade via number_format().
      *
      * Return: Collection of ['description', 'tooltip', 'quantity']
      */
@@ -191,14 +181,13 @@ class ConfigurationDataCHP extends Component
         if (empty($months)) return collect();
 
         return collect($rowDefs)->map(function (array $rowDef) use ($months): array {
-            // Jumlahkan quantity semua bulan dalam periode
             $rawValue = array_reduce(
                 $months,
                 fn(float $carry, string $month) => $carry + $this->sumEnergyData($rowDef['conditions'], $month),
                 0.0
             );
 
-            // Terapkan formula opsional (misal: '/850*0.65')
+            // Apply optional formula (e.g. '/850*0.65') — no round()
             $value = isset($rowDef['formula'])
                 ? eval("return {$rawValue}{$rowDef['formula']};")
                 : $rawValue;
@@ -206,7 +195,7 @@ class ConfigurationDataCHP extends Component
             return [
                 'description' => $rowDef['description'],
                 'tooltip'     => $rowDef['tooltip'] ?? '',
-                'quantity'    => round($value, 2),
+                'quantity'    => (float) $value,  // raw, unrounded
             ];
         });
     }
@@ -215,7 +204,6 @@ class ConfigurationDataCHP extends Component
     // LIVEWIRE HOOKS
     // =========================================================================
 
-    /** Reset period jika tahun dikosongkan */
     public function updatedPeriodYear(): void
     {
         if (empty($this->periodYear)) {
@@ -227,7 +215,6 @@ class ConfigurationDataCHP extends Component
     // COMPUTED – FILTER
     // =========================================================================
 
-    /** Daftar tahun yang tersedia di MasterEnergyData untuk dropdown Year */
     #[Computed]
     public function availableYears(): Collection
     {
@@ -241,10 +228,6 @@ class ConfigurationDataCHP extends Component
     // COMPUTED – TABLE 1: FUEL INPUT
     // =========================================================================
 
-    /**
-     * Table 1 (kiri) – Fuel Input Quantity
-     * Mengembalikan quantity BFG, LDG, COG, HSD untuk periode terpilih.
-     */
     #[Computed]
     public function chpTableData(): Collection
     {
@@ -252,9 +235,9 @@ class ConfigurationDataCHP extends Component
     }
 
     /**
-     * Table 1 (kanan) – Fuel Input Emission
-     * Mengalikan quantity setiap bahan bakar dengan emission conversion factor-nya.
-     * Baris terakhir adalah Total (sum semua baris).
+     * Table 1.1 – Fuel Input Emission
+     * All intermediate calculations kept as raw floats.
+     * 'tj' and 'conversion' stored unrounded for use in downstream computed properties.
      */
     #[Computed]
     public function emissionTableData(): Collection
@@ -276,16 +259,16 @@ class ConfigurationDataCHP extends Component
             return [
                 'description' => $row['description'],
                 'conversion'  => $factor,
-                'tj'          => round($tj, 2),
+                'tj'          => $tj,   // raw, unrounded
                 'tooltip'     => '<ul><li>Table 1 Fuel Input Quantity [' . $row['description'] . '] * Emission Factor (tCO2/Nm³ or tCO2/ton) = ' . number_format($factor, 10) . '</li></ul>',
             ];
         });
 
-        // Tambahkan baris Total di akhir
+        // Total row — raw sum, no round()
         $result->push([
             'description' => 'Total',
             'conversion'  => 'Total',
-            'tj'          => round($total, 2),
+            'tj'          => $total,   // raw, unrounded
             'tooltip'     => '<ul><li>Sum of all Fuel Input Emissions above</li></ul>',
         ]);
 
@@ -296,10 +279,6 @@ class ConfigurationDataCHP extends Component
     // COMPUTED – TABLE 2: STEAM OUTPUT
     // =========================================================================
 
-    /**
-     * Table 2 (kiri) – Steam Output Quantity
-     * Mengembalikan quantity steam untuk periode terpilih.
-     */
     #[Computed]
     public function steamTableData(): Collection
     {
@@ -307,22 +286,21 @@ class ConfigurationDataCHP extends Component
     }
 
     /**
-     * Table 2 (kanan) – Steam Output Conversion
-     * Menghitung konversi steam: Tj, EF, Emission, dan EF per Tj.
+     * Table 2.2 – Steam Output Conversion
+     * All values raw floats. Rounding only in blade.
      */
     #[Computed]
     public function steamConversionTableData(): Collection
     {
-        $steamQty    = $this->steamTableData()->first()['quantity'] ?? 0.0;
-        $steamTjRaw  = $steamQty * $this->steamConversionFactor;
-        $steamTj     = round($steamTjRaw, 2);
-        $emission    = round($steamQty * $this->steamEmissionFactor, 2);
-        $efPerTj     = $steamTjRaw > 0 ? round($emission / $steamTjRaw, 4) : 0.0;
+        $steamQty   = $this->steamTableData()->first()['quantity'] ?? 0.0;
+        $steamTj    = $steamQty * $this->steamConversionFactor;   // raw
+        $emission   = $steamQty * $this->steamEmissionFactor;      // raw
+        $efPerTj    = $steamTj > 0 ? ($emission / $steamTj) : 0.0; // raw
 
         return collect([
             [
                 'conversion' => $this->steamConversionFactor,
-                'steam'      => $steamTj,
+                'steam'      => $steamTj,       // raw
                 'unit'       => 'Tj',
                 'tooltip'    => '<ul><li>Steam Output * Conversion (Tj/ton)</li></ul>',
             ],
@@ -334,13 +312,13 @@ class ConfigurationDataCHP extends Component
             ],
             [
                 'conversion' => 'Emission',
-                'steam'      => $emission,
+                'steam'      => $emission,      // raw
                 'unit'       => 'tCO2',
                 'tooltip'    => '<ul><li>Steam Output * EF Steam</li></ul>',
             ],
             [
                 'conversion' => 'EF Steam',
-                'steam'      => $efPerTj,
+                'steam'      => $efPerTj,       // raw
                 'unit'       => 'tCO2/Tj',
                 'tooltip'    => '<ul><li>Emission / Steam Tj</li></ul>',
             ],
@@ -351,10 +329,6 @@ class ConfigurationDataCHP extends Component
     // COMPUTED – TABLE 3: ELECTRICITY OUTPUT
     // =========================================================================
 
-    /**
-     * Table 3 (kiri) – Electricity Output Quantity
-     * Mengembalikan quantity listrik dalam kWh dan MWh untuk periode terpilih.
-     */
     #[Computed]
     public function electricityTableData(): Collection
     {
@@ -362,29 +336,29 @@ class ConfigurationDataCHP extends Component
         $row  = $data->first();
 
         if ($row) {
-            $row['quantity_mwh'] = round($row['quantity'] / 1000, 2);
+            $row['quantity_mwh'] = $row['quantity'] / 1000;  // raw, no round()
             $row['tooltip_mwh']  = ($row['tooltip'] ?? '') . ' / 1000';
         }
 
         return collect([
-            $row ?? ['description' => 'No data', 'quantity' => 0, 'quantity_mwh' => 0],
+            $row ?? ['description' => 'No data', 'quantity' => 0.0, 'quantity_mwh' => 0.0],
         ]);
     }
 
     /**
-     * Table 3 (kanan) – Electricity Output Conversion
-     * Mengalikan quantity listrik (kWh) dengan conversion factor (Tj/kWh).
+     * Table 3.1 – Electricity Output Conversion
+     * Raw float stored in 'electricity'. Rounding only in blade.
      */
     #[Computed]
     public function electricityConversionTableData(): Collection
     {
         $elecQty = $this->electricityTableData()->first()['quantity'] ?? 0.0;
-        $elecTj  = round($elecQty * $this->electricityConversionFactor, 10);
+        $elecTj  = $elecQty * $this->electricityConversionFactor;   // raw, no round()
 
         return collect([
             [
-                'conversion' => number_format($this->electricityConversionFactor, 11),
-                'electricity' => $elecTj,
+                'conversion'  => number_format($this->electricityConversionFactor, 11),
+                'electricity' => $elecTj,   // raw
                 'unit'        => 'Tj',
                 'tooltip'     => '<ul><li>Electricity Output * Conversion (Tj/kWh)</li></ul>',
             ],
@@ -395,11 +369,6 @@ class ConfigurationDataCHP extends Component
     // COMPUTED – COKE TABLE (SINTER & BLAST FURNACE)
     // =========================================================================
 
-    /**
-     * Coke Table – data dari MasterSinter dan MasterBf.
-     * Berbeda dengan tabel lain, sumber datanya bukan MasterEnergyData
-     * sehingga tidak menggunakan buildQuantityTable().
-     */
     #[Computed]
     public function cokeTableData(): Collection
     {
@@ -433,14 +402,14 @@ class ConfigurationDataCHP extends Component
             [
                 'plant'    => 'Sinter Plant',
                 'source'   => 'Breezed Coke',
-                'quantity' => round($sinterQty, 2),
+                'quantity' => $sinterQty,   // raw
                 'unit'     => 'Ton',
                 'tooltip'  => '<ul><li>Quantity from master_sinters where classification = EF8T0001, sub_class = Total</li></ul>',
             ],
             [
                 'plant'    => 'Blast Furnace Plant',
                 'source'   => 'Lump Coke',
-                'quantity' => round($bfQty, 2),
+                'quantity' => $bfQty,       // raw
                 'unit'     => 'Ton',
                 'tooltip'  => '<ul><li>Quantity from master_bfs where classification = Fuel, sub_class = Irn.Mfg, sub_subclass = EF1K1</li></ul>',
             ],
@@ -451,66 +420,52 @@ class ConfigurationDataCHP extends Component
     // COMPUTED – TABLE 5: POWER EMISSION FACTOR FROM KPE
     // =========================================================================
 
-    /**
-     * Menghitung total emission (tCO2) per byproduct gas baris 0..3 berdasarkan
-     * nilai Tj dari `emissionTableData()` dikalikan emission factor (56.1 TCO2/Tj).
-     * Juga menghitung Sum dan rasio terhadap produksi listrik (MWh).
-     */
     #[Computed]
     public function powerEmissionKpeData(): Collection
     {
-        // emissionTableData() sudah berisi kolom 'tj' untuk tiap baris
         $emRows = $this->emissionTableData()->values();
 
-        $rows = collect();
+        $rows          = collect();
         $totalEmission = 0.0;
-
-        // factor per baris (semua 56.1 sesuai requirement)
-        $factor = 56.1;
+        $factor        = 56.1;
 
         for ($i = 0; $i < 4; $i++) {
-            $tj = $emRows[$i]['tj'] ?? 0.0;
-            $em = $tj * $factor;
+            $tj = $emRows[$i]['tj'] ?? 0.0;   // already raw
+            $em = $tj * $factor;               // raw, no round()
             $totalEmission += $em;
 
             $rows->push([
-                'factor' => $factor,
-                'total_emission' => round($em, 2),
-                'tooltip' => '<ul><li>Table 1.1 Fuel Input Conversion, column Byproduct Gas[' . $i . '] * Emission Factor (TCO2/Tj)[' . $i . ']</li></ul>',
+                'factor'         => $factor,
+                'total_emission' => $em,        // raw
+                'tooltip'        => '<ul><li>Table 1.1 Fuel Input Conversion, column Byproduct Gas[' . $i . '] * Emission Factor (TCO2/Tj)[' . $i . ']</li></ul>',
             ]);
         }
 
-        // Sum row
+        // Sum row — raw
         $rows->push([
-            'factor' => 'Total',
-            'total_emission' => round($totalEmission, 4),
-            'tooltip' => '<ul><li>Sum(TotalEmission[0]:[3])</li></ul>',
+            'factor'         => 'Total',
+            'total_emission' => $totalEmission,     // raw
+            'tooltip'        => '<ul><li>Sum(TotalEmission[0]:[3])</li></ul>',
         ]);
 
-        // Compute ratio: Sum / (Table 3 Electricity Output / 1000)
-        $elec = $this->electricityTableData()->first() ?? ['quantity' => 0, 'quantity_mwh' => 0];
-        $mwh = $elec['quantity_mwh'] ?? (isset($elec['quantity']) ? ($elec['quantity'] / 1000) : 0);
-        $ratio = $mwh > 0 ? round($totalEmission / $mwh, 4) : 0;
+        // Ratio row — raw
+        $elec  = $this->electricityTableData()->first() ?? ['quantity' => 0.0, 'quantity_mwh' => 0.0];
+        $mwh   = $elec['quantity_mwh'] ?? ($elec['quantity'] / 1000);
+        $ratio = $mwh > 0 ? ($totalEmission / $mwh) : 0.0;   // raw, no round()
 
         $rows->push([
-            'factor' => 'Total / ( Electricity Output/1000 ) (tCO2/Mwh)',
-            'total_emission' => $ratio,
-            'tooltip' => '<ul><li>(Sum(TotalEmission[0]:[3])) / (Table 3 Electricity Output / 1000)</li></ul>',
+            'factor'         => 'Total / ( Electricity Output/1000 ) (tCO2/Mwh)',
+            'total_emission' => $ratio,     // raw
+            'tooltip'        => '<ul><li>(Sum(TotalEmission[0]:[3])) / (Table 3 Electricity Output / 1000)</li></ul>',
         ]);
 
         return $rows;
     }
 
     // =========================================================================
-// COMPUTED – TABLE 6: STEAM EMISSION FACTOR FROM KPE
-// =========================================================================
+    // COMPUTED – TABLE 6: STEAM EMISSION FACTOR FROM KPE
+    // =========================================================================
 
-    /**
-     * Menghitung total emission (tCO2) per byproduct gas berdasarkan
-     * nilai Tj dari `emissionTableData()` dikalikan emission factor masing-masing.
-     * Factor berbeda tiap baris: BFG=260, LDG=182, COG=44.4, HSD=74.1
-     * Juga menghitung Sum dan rasio terhadap produksi listrik (MWh).
-     */
     #[Computed]
     public function steamEmissionKpeData(): Collection
     {
@@ -520,56 +475,56 @@ class ConfigurationDataCHP extends Component
         $rows          = collect();
         $totalEmission = 0.0;
 
-        // Baris 0-3: per bahan bakar
+        // Rows 0-3: per fuel — all raw
         for ($i = 0; $i < 4; $i++) {
-            $tj     = $emRows[$i]['tj'] ?? 0.0;
+            $tj     = $emRows[$i]['tj'] ?? 0.0;   // raw
             $factor = $factors[$i];
-            $em     = $tj * $factor;
+            $em     = $tj * $factor;               // raw, no round()
             $totalEmission += $em;
 
             $rows->push([
                 'factor'         => $factor,
-                'total_emission' => round($em, 2),
+                'total_emission' => $em,    // raw
                 'tooltip'        => '<ul><li>Table 1.1 Fuel Input Conversion, column Byproduct Gas[' . $i . '] * Emission Factor (TCO2/Tj)[' . $i . ']</li></ul>',
             ]);
         }
 
-        // Baris 4: Sum
+        // Row 4: Sum — raw
         $rows->push([
             'factor'         => 'Total',
-            'total_emission' => round($totalEmission, 4),
+            'total_emission' => $totalEmission,     // raw
             'tooltip'        => '<ul><li>Sum(TotalEmission[0]:[3])</li></ul>',
         ]);
 
-        // Ambil MWh dari Table 3 (dipakai baris 5 & 7)
-        $elec = $this->electricityTableData()->first() ?? ['quantity' => 0, 'quantity_mwh' => 0];
-        $mwh  = $elec['quantity_mwh'] ?? ($elec['quantity'] / 1000 ?? 0);
+        // MWh from Table 3
+        $elec = $this->electricityTableData()->first() ?? ['quantity' => 0.0, 'quantity_mwh' => 0.0];
+        $mwh  = $elec['quantity_mwh'] ?? ($elec['quantity'] / 1000);
 
-        // Baris 5: Sum / MWh
-        $ratio = $mwh > 0 ? round($totalEmission / $mwh, 4) : 0;
+        // Row 5: Sum / MWh — raw
+        $ratio = $mwh > 0 ? ($totalEmission / $mwh) : 0.0;
         $rows->push([
             'factor'         => 'Total / ( Electricity Output/1000 ) (tCO2/MWh)',
-            'total_emission' => $ratio,
+            'total_emission' => $ratio,     // raw
             'tooltip'        => '<ul><li>(Sum(TotalEmission[0]:[3])) / (Table 3 Electricity Output / 1000)</li></ul>',
         ]);
 
-        // Ambil nilai Emission dari Table 2.2 (baris unit = 'tCO2')
+        // Steam emission from Table 2.2 (unit = 'tCO2')
         $steamEmission = $this->steamConversionTableData()
-            ->firstWhere('unit', 'tCO2')['steam'] ?? 0.0;
+            ->firstWhere('unit', 'tCO2')['steam'] ?? 0.0;   // already raw
 
-        // Baris 6: Sum - Steam Emission
-        $netEmission = round($totalEmission - $steamEmission, 4);
+        // Row 6: Sum - Steam Emission — raw
+        $netEmission = $totalEmission - $steamEmission;
         $rows->push([
             'factor'         => 'Total - Table 2.2 Emission (tCO2)',
-            'total_emission' => $netEmission,
+            'total_emission' => $netEmission,   // raw
             'tooltip'        => '<ul><li>Table 6 Sum(TotalEmission[0]:[3]) - Table 2.2 Conversion Emission</li></ul>',
         ]);
 
-        // Baris 7: Net Emission / MWh
-        $netRatio = $mwh > 0 ? round($netEmission / $mwh, 4) : 0;
+        // Row 7: Net Emission / MWh — raw
+        $netRatio = $mwh > 0 ? ($netEmission / $mwh) : 0.0;
         $rows->push([
             'factor'         => 'Net Emission / ( Electricity Output/1000 ) (tCO2/MWh)',
-            'total_emission' => $netRatio,
+            'total_emission' => $netRatio,  // raw
             'tooltip'        => '<ul><li>(Table 6 Sum - Table 2.2 Emission) / (Table 3 Electricity Output / 1000)</li></ul>',
         ]);
 
@@ -583,22 +538,15 @@ class ConfigurationDataCHP extends Component
     public function render()
     {
         return view('livewire.configuration-data-chp', [
-            // Filter
             'availableYears'                 => $this->availableYears,
-            // Table 1
             'chpTableData'                   => $this->chpTableData,
             'emissionTableData'              => $this->emissionTableData,
-            // Table 2
             'steamTableData'                 => $this->steamTableData,
             'steamConversionTableData'       => $this->steamConversionTableData,
-            // Table 3
             'electricityTableData'           => $this->electricityTableData,
             'electricityConversionTableData' => $this->electricityConversionTableData,
-            // Coke
             'cokeTableData'                  => $this->cokeTableData,
-            // Table 5
             'powerEmissionKpeData'           => $this->powerEmissionKpeData,
-            // Table 6
             'steamEmissionKpeData'           => $this->steamEmissionKpeData,
         ]);
     }

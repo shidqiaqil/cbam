@@ -78,10 +78,10 @@ class ConfigurationData extends Component
                 ['plant_code' => 'IBN000', 'plant_name' => 'Blast Furnace Plant',                                 'energy_name' => 'POWER', 'criteria' => 'CONSUMPTION'],
                 ['plant_code' => 'IEA000', 'plant_name' => 'Steel making',                                        'energy_name' => 'POWER', 'criteria' => 'CONSUMPTION'],
                 ['plant_code' => 'IEE000', 'plant_name' => 'Continuous Casting',                                  'energy_name' => 'POWER', 'criteria' => 'CONSUMPTION'],
-                ['plant_code' => 'ITC110', 'plant_name' => 'Water-Fresh water from KTI',                             'energy_name' => 'POWER', 'criteria' => 'CONSUMPTION'],
+                ['plant_code' => 'ITC110', 'plant_name' => 'Water-Fresh water from KTI',                          'energy_name' => 'POWER', 'criteria' => 'CONSUMPTION'],
                 ['plant_code' => 'ITC120', 'plant_name' => 'Water-Fresh water from recycling facility',           'energy_name' => 'POWER', 'criteria' => 'CONSUMPTION'],
                 ['plant_code' => 'ITD120', 'plant_name' => 'Utility- By Product Gas distribution',                'energy_name' => 'POWER', 'criteria' => 'CONSUMPTION'],
-                ['plant_code' => 'ITB110', 'plant_name' => 'Electric Power System-incoming and distribution',    'energy_name' => 'POWER', 'criteria' => 'CONSUMPTION'],
+                ['plant_code' => 'ITB110', 'plant_name' => 'Electric Power System-incoming and distribution',     'energy_name' => 'POWER', 'criteria' => 'CONSUMPTION'],
                 ['plant_code' => 'ITZ990', 'plant_name' => 'Energy Dept Common',                                  'energy_name' => 'POWER', 'criteria' => 'CONSUMPTION'],
                 ['plant_code' => 'IUA000', 'plant_name' => 'Facility Technology Department',                      'energy_name' => 'POWER', 'criteria' => 'CONSUMPTION'],
                 ['plant_code' => 'IVA000', 'plant_name' => 'Production Technology Departement',                   'energy_name' => 'POWER', 'criteria' => 'CONSUMPTION'],
@@ -339,7 +339,7 @@ class ConfigurationData extends Component
             return [
                 'description' => $rowData['description'],
                 'tooltip'     => $rowData['tooltip'] ?? '',
-                $valueKey     => round($value, 2),
+                $valueKey     => (float) $value,
             ];
         });
     }
@@ -356,7 +356,7 @@ class ConfigurationData extends Component
     }
 
     // -------------------------------------------------------------------------
-    // Computed properties  ← #[Computed] makes them reactive in Livewire 3
+    // Computed properties
     // -------------------------------------------------------------------------
 
     #[Computed]
@@ -375,18 +375,17 @@ class ConfigurationData extends Component
 
         $data = $this->buildTableData($this->energyRows, 'power');
 
-        // Append Total row with formula: BF Gen + PLN + KPE - Plate Mill - COP
-        $bf = $data[0]['power'] ?? 0;
-        $pln = $data[1]['power'] ?? 0;
-        $kpe = $data[2]['power'] ?? 0;
+        $bf    = $data[0]['power'] ?? 0;
+        $pln   = $data[1]['power'] ?? 0;
+        $kpe   = $data[2]['power'] ?? 0;
         $plate = $data[3]['power'] ?? 0;
-        $cop = $data[4]['power'] ?? 0;
+        $cop   = $data[4]['power'] ?? 0;
         $total = $bf + $pln + $kpe - $plate - $cop;
 
         $data->push([
             'description' => 'Total',
             'tooltip'     => 'BF Generation + Purchase Electricity from PLN + Purchase (KPE Power) - Plate Mill Electricity Consumption - COP Electricity Consumption',
-            'power'       => round($total, 2),
+            'power'       => $total,
         ]);
 
         return $data;
@@ -399,7 +398,6 @@ class ConfigurationData extends Component
 
         $data = $this->buildTableData($this->energyRowsTable2, 'power');
 
-        // Total Purchase Electricity = BF Generation (idx 1) + Purchase KPE (idx 2) + PLN (idx 3)
         $total = 0;
         if ($data->count() >= 4) {
             $total = $data[1]['power'] + $data[2]['power'] + $data[3]['power'];
@@ -407,7 +405,7 @@ class ConfigurationData extends Component
         $data->push([
             'description' => 'Total Purchase Electricity',
             'tooltip'     => 'BF Generation + Purchase (KPE Power) + Purchase Electricity from PLN',
-            'power'       => round($total, 2),
+            'power'       => $total,
         ]);
 
         return $data;
@@ -420,7 +418,6 @@ class ConfigurationData extends Component
 
         $data = $this->buildTableData($this->energyRowsTable3, 'power');
 
-        // Total = BF (idx 1) + SMP & CCP + Energy (idx 2)
         $total = 0;
         if ($data->count() >= 3) {
             $total = $data[1]['power'] + $data[2]['power'];
@@ -428,7 +425,7 @@ class ConfigurationData extends Component
         $data->push([
             'description' => 'Total',
             'tooltip'     => 'BF + SMP & CCP + Energy',
-            'power'       => round($total, 2),
+            'power'       => $total,
         ]);
 
         return $data;
@@ -441,7 +438,6 @@ class ConfigurationData extends Component
 
         $data = $this->buildTableData($this->energyRowsTable4, 'power');
 
-        // Total Purchase Steam = SMP Generation (idx 1) + Purchase KPE (idx 2)
         $total = 0;
         if ($data->count() >= 3) {
             $total = $data[1]['power'] + $data[2]['power'];
@@ -449,7 +445,7 @@ class ConfigurationData extends Component
         $data->push([
             'description' => 'Total Purchase Steam',
             'tooltip'     => 'SMP Generation + Purchase KPE',
-            'power'       => round($total, 2),
+            'power'       => $total,
         ]);
 
         return $data;
@@ -481,7 +477,6 @@ class ConfigurationData extends Component
 
         $data = collect();
 
-        // Row 1 — Reverse Power
         $reversePower = 0;
         foreach ($months as $month) {
             $reversePower += $this->getRowQuantity($this->energyRowsExportElectricity[0]['conditions'], $month);
@@ -489,10 +484,9 @@ class ConfigurationData extends Component
         $data->push([
             'description' => 'Reverse Power',
             'tooltip'     => $this->energyRowsExportElectricity[0]['tooltip'],
-            'quantity'    => round($reversePower, 2),
+            'quantity'    => $reversePower,
         ]);
 
-        // Row 2 — Export to Coke Plant
         $qty2 = 0;
         foreach ($months as $month) {
             $qty2 += $this->getRowQuantity($this->energyRowsExportElectricity[1]['conditions'], $month);
@@ -500,10 +494,9 @@ class ConfigurationData extends Component
         $data->push([
             'description' => 'Export to Coke Plant',
             'tooltip'     => $this->energyRowsExportElectricity[1]['tooltip'],
-            'quantity'    => round($qty2, 2),
+            'quantity'    => $qty2,
         ]);
 
-        // Row 3 — Total Power Sales to tenant
         $qty3 = 0;
         foreach ($months as $month) {
             $qty3 += $this->getRowQuantity($this->energyRowsExportElectricity[2]['conditions'], $month);
@@ -511,17 +504,287 @@ class ConfigurationData extends Component
         $data->push([
             'description' => 'Total Power Sales to tenant',
             'tooltip'     => $this->energyRowsExportElectricity[2]['tooltip'],
-            'quantity'    => round($qty3, 2),
+            'quantity'    => $qty3,
         ]);
 
-        // Row 4 — Reverse Power / 1000
         $data->push([
             'description' => 'Reverse Power/1000',
             'tooltip'     => 'Reverse Power value / 1000',
-            'quantity'    => round($reversePower / 1000, 2),
+            'quantity'    => $reversePower / 1000,
         ]);
 
         return $data;
+    }
+
+    // -------------------------------------------------------------------------
+    // Computed – Fetch CHP emission factors from ConfigurationDataCHP
+    // -------------------------------------------------------------------------
+
+    /**
+     * Retrieve the CHP Table 6 row value by its 'factor' label.
+     * This instantiates ConfigurationDataCHP using the same period/year
+     * so we can read its computed emission factors directly.
+     */
+    private function getChpSteamEmissionFactorByLabel(string $label): float
+    {
+        if (empty($this->periodYear) || empty($this->period)) return 0.0;
+
+        // Instantiate CHP component with same period context
+        $chp = new ConfigurationDataCHP();
+        $chp->periodYear = $this->periodYear;
+        $chp->period     = $this->period;
+
+        // Find the row in steamEmissionKpeData matching the label
+        $row = $chp->steamEmissionKpeData()->firstWhere('factor', $label);
+
+        return (float) ($row['total_emission'] ?? 0.0);
+    }
+
+    // -------------------------------------------------------------------------
+    // Computed – TABLE 1.1: Emission from Table 1 Energy Data
+    // -------------------------------------------------------------------------
+
+    /**
+     * Table 1.1 – Emission calculation for each Table 1 row.
+     *
+     * Emission Factors:
+     *   EF[0] = 0                            (BF Generation – internal, no grid EF)
+     *   EF[1] = 0.87                         (PLN – national grid emission factor)
+     *   EF[2] = CHP Table 6 "Total / (Electricity Output/1000) (tCO2/MWh)"
+     *   EF[3] = Table 2.1 EF[4]             (Plate Mill – same EF as Table 2.1 row 4/total)
+     *   EF[4] = Table 2.1 EF[4]             (COP – same EF as Table 2.1 row 4/total)
+     *
+     * Total Emission = Emission[1] + Emission[2] - Emission[3] - Emission[4]
+     *
+     * Note: EF[3] and EF[4] depend on Table 2.1 EF[4]. Table 2.1 EF[4] is
+     * computed as: TotalEmission_Table2.1 / (Table2 Total Purchase Electricity / 1000)
+     * which does NOT depend on Table 1.1, so there is no circular dependency.
+     */
+    #[Computed]
+    public function emissionTableData11(): Collection
+    {
+        if (empty($this->periodYear) || empty($this->period)) return collect();
+
+        // Get Table 1 energy quantities (power values in kWh)
+        $t1 = $this->energyTableData;
+        if ($t1->isEmpty()) return collect();
+
+        $bf_kwh    = $t1[0]['power'] ?? 0; // BF Generation
+        $pln_kwh   = $t1[1]['power'] ?? 0; // Purchase Electricity from PLN
+        $kpe_kwh   = $t1[2]['power'] ?? 0; // Purchase (KPE Power)
+        $plate_kwh = $t1[3]['power'] ?? 0; // Plate Mill Electricity Consumption
+        $cop_kwh   = $t1[4]['power'] ?? 0; // COP Electricity Consumption
+
+        // Emission factors
+        $ef0 = 0.0;   // BF Generation
+        $ef1 = 0.87;  // PLN
+
+        // EF[2] from CHP Table 6: "Total / ( Electricity Output/1000 ) (tCO2/MWh)"
+        $ef2 = $this->getChpSteamEmissionFactorByLabel('Total / ( Electricity Output/1000 ) (tCO2/MWh)');
+
+        // EF[3] and EF[4] come from Table 2.1 EF[4] (the "per MWh" factor for the total)
+        // We need Table 2.1 data – compute it here to avoid double-computation issues.
+        // Table 2.1 EF[4] = TotalEmission_Table2.1 / (Table2 Total Purchase Electricity / 1000)
+        $table21EF4 = $this->computeTable21Ef4();
+        $ef3        = $table21EF4;
+        $ef4        = $table21EF4;
+
+        // Emission calculations (kWh → MWh: divide by 1000)
+        $em0 = $bf_kwh    * $ef0 / 1000;
+        $em1 = $pln_kwh   * $ef1 / 1000;
+        $em2 = $kpe_kwh   * $ef2 / 1000;
+        $em3 = $plate_kwh * $ef3 / 1000;
+        $em4 = $cop_kwh   * $ef4 / 1000;
+
+        // Total = em[1] + em[2] - em[3] - em[4]
+        $total = $em1 + $em2 - $em3 - $em4;
+
+        return collect([
+            [
+                'description'      => 'BF Generation',
+                'emission_factor'  => $ef0,
+                'ef_tooltip'       => '<ul><li>Fixed value: 0 (BF Generation is internal generation, no grid emission factor applied)</li></ul>',
+                'total_emission'   => $em0,
+                'em_tooltip'       => '<ul><li>Table 1 BF Generation (kWh) × Emission Factor (tCO2/MWh) [0] / 1000</li><li>= ' . number_format($bf_kwh, 2) . ' × ' . $ef0 . ' / 1000</li></ul>',
+                'unit'             => 'tCO2',
+            ],
+            [
+                'description'      => 'Purchase Electricity from PLN',
+                'emission_factor'  => $ef1,
+                'ef_tooltip'       => '<ul><li>Fixed value: 0.8700 tCO2/MWh (PLN national grid emission factor)</li></ul>',
+                'total_emission'   => $em1,
+                'em_tooltip'       => '<ul><li>Table 1 Purchase Electricity from PLN (kWh) × Emission Factor (tCO2/MWh) [1] / 1000</li><li>= ' . number_format($pln_kwh, 2) . ' × ' . $ef1 . ' / 1000</li></ul>',
+                'unit'             => 'tCO2',
+            ],
+            [
+                'description'      => 'Purchase (KPE Power)',
+                'emission_factor'  => $ef2,
+                'ef_tooltip'       => '<ul><li>From CHP Power Plant Tab → Table 6, row: "Total / ( Electricity Output/1000 ) (tCO2/MWh)"</li></ul>',
+                'total_emission'   => $em2,
+                'em_tooltip'       => '<ul><li>Table 1 Purchase (KPE Power) (kWh) × Emission Factor (tCO2/MWh) [2] / 1000</li><li>= ' . number_format($kpe_kwh, 2) . ' × ' . $ef2 . ' / 1000</li></ul>',
+                'unit'             => 'tCO2',
+            ],
+            [
+                'description'      => 'Plate Mill Electricity Consumption',
+                'emission_factor'  => $ef3,
+                'ef_tooltip'       => '<ul><li>From Table 2.1 Emission Factor (tCO2/MWh) [4] — computed as Total Emission Table 2.1 / (Table 2 Total Purchase Electricity / 1000)</li></ul>',
+                'total_emission'   => $em3,
+                'em_tooltip'       => '<ul><li>Table 1 Plate Mill Electricity Consumption (kWh) × Emission Factor (tCO2/MWh) [3] / 1000</li><li>= ' . number_format($plate_kwh, 2) . ' × ' . $ef3 . ' / 1000</li></ul>',
+                'unit'             => 'tCO2',
+            ],
+            [
+                'description'      => 'COP Electricity Consumption',
+                'emission_factor'  => $ef4,
+                'ef_tooltip'       => '<ul><li>From Table 2.1 Emission Factor (tCO2/MWh) [4] — computed as Total Emission Table 2.1 / (Table 2 Total Purchase Electricity / 1000)</li></ul>',
+                'total_emission'   => $em4,
+                'em_tooltip'       => '<ul><li>Table 1 COP Electricity Consumption (kWh) × Emission Factor (tCO2/MWh) [4] / 1000</li><li>= ' . number_format($cop_kwh, 2) . ' × ' . $ef4 . ' / 1000</li></ul>',
+                'unit'             => 'tCO2',
+            ],
+            [
+                'description'      => 'Total',
+                'emission_factor'  => 0,
+                'ef_tooltip'       => '<ul><li>Fixed: 0</li></ul>',
+                'total_emission'   => $total,
+                'em_tooltip'       => '<ul><li>Total Emission = Emission[PLN] + Emission[KPE] − Emission[Plate Mill] − Emission[COP]</li><li>= ' . $em1 . ' + ' . $em2 . ' − ' . $em3 . ' − ' . $em4 . '</li></ul>',
+                'unit'             => 'tCO2',
+                'is_total'         => true,
+            ],
+        ]);
+    }
+
+    // -------------------------------------------------------------------------
+    // Computed – TABLE 2.1: Emission from Table 2 Energy Data
+    // -------------------------------------------------------------------------
+
+    /**
+     * Helper: compute Table 2.1 EF[4] (the blended emission factor for total purchase electricity).
+     * This is: (Emission[1] + Emission[2] + Emission[3]) / (Table2 Total Purchase Electricity / 1000)
+     *
+     * Where:
+     *   Emission[1] = Table2 BF Generation * EF[1]=0 / 1000          → always 0
+     *   Emission[2] = Table2 KPE Power     * EF[2]=CHP Table6 / 1000
+     *   Emission[3] = Table2 PLN           * EF[3]=Table1.1 EF[1]=0.87 / 1000
+     */
+    private function computeTable21Ef4(): float
+    {
+        $t2 = $this->energyTableDataTable2;
+        if ($t2->isEmpty()) return 0.0;
+
+        $bf_kwh  = $t2[1]['power'] ?? 0; // BF Generation
+        $kpe_kwh = $t2[2]['power'] ?? 0; // Purchase (KPE Power)
+        $pln_kwh = $t2[3]['power'] ?? 0; // Purchase Electricity from PLN
+
+        // Total Purchase Electricity (last row pushed to collection)
+        $totalPurchase = $t2->last()['power'] ?? 0;
+
+        $ef1_t2 = 0.0;   // BF Generation EF = 0
+        $ef2_t2 = $this->getChpSteamEmissionFactorByLabel('Net Emission / ( Electricity Output/1000 ) (tCO2/MWh)');
+        $ef3_t2 = 0.87;  // PLN EF (same as Table 1.1 EF[1])
+
+        $em1 = $bf_kwh  * $ef1_t2 / 1000;
+        $em2 = $kpe_kwh * $ef2_t2 / 1000;
+        $em3 = $pln_kwh * $ef3_t2 / 1000;
+
+        $totalEmission  = $em1 + $em2 + $em3;
+        $totalPurchaseMwh = $totalPurchase / 1000;
+
+        return $totalPurchaseMwh > 0 ? ($totalEmission / $totalPurchaseMwh) : 0.0;
+    }
+
+    /**
+     * Table 2.1 – Emission calculation for each Table 2 row.
+     *
+     * Emission Factors:
+     *   EF[0] = Table 2.1 EF[4]  (Operational – uses blended factor)
+     *   EF[1] = 0                (BF Generation – internal, no grid EF)
+     *   EF[2] = CHP Table 6 "Net Emission / ( Electricity Output/1000 ) (tCO2/MWh)"
+     *   EF[3] = 0.87             (PLN – same as Table 1.1 EF[1])
+     *
+     * EF[4] (shown in last/total row) = Total Emission [1]+[2]+[3] / (Table2 Total Purchase Electricity / 1000)
+     * Total Emission = Emission[1] + Emission[2] + Emission[3]
+     */
+    #[Computed]
+    public function emissionTableData21(): Collection
+    {
+        if (empty($this->periodYear) || empty($this->period)) return collect();
+
+        $t2 = $this->energyTableDataTable2;
+        if ($t2->isEmpty()) return collect();
+
+        // Table 2 quantities (kWh)
+        $operational_kwh = $t2[0]['power'] ?? 0; // Operational usage for Slab Production
+        $bf_kwh          = $t2[1]['power'] ?? 0; // BF Generation
+        $kpe_kwh         = $t2[2]['power'] ?? 0; // Purchase (KPE Power)
+        $pln_kwh         = $t2[3]['power'] ?? 0; // Purchase Electricity from PLN
+
+        // Total Purchase Electricity from Table 2 (last row)
+        $totalPurchaseKwh = $t2->last()['power'] ?? 0;
+
+        // Emission Factors
+        $ef1_t2 = 0.0;   // BF Generation
+        $ef2_t2 = $this->getChpSteamEmissionFactorByLabel('Net Emission / ( Electricity Output/1000 ) (tCO2/MWh)');
+        $ef3_t2 = 0.87;  // PLN
+
+        // EF[4] = blended factor (computed from em[1]+em[2]+em[3] / totalPurchase MWh)
+        $ef4_t2 = $this->computeTable21Ef4();
+
+        // EF[0] for Operational = EF[4] (blended)
+        $ef0_t2 = $ef4_t2;
+
+        // Emission calculations
+        $em0 = $operational_kwh * $ef0_t2 / 1000;
+        $em1 = $bf_kwh          * $ef1_t2 / 1000;
+        $em2 = $kpe_kwh         * $ef2_t2 / 1000;
+        $em3 = $pln_kwh         * $ef3_t2 / 1000;
+
+        // Total Emission = em[1] + em[2] + em[3]
+        $totalEmission    = $em1 + $em2 + $em3;
+        $totalPurchaseMwh = $totalPurchaseKwh / 1000;
+        $ef4_display      = $totalPurchaseMwh > 0 ? ($totalEmission / $totalPurchaseMwh) : 0.0;
+
+        return collect([
+            [
+                'description'      => 'Operational usage for Slab Production',
+                'emission_factor'  => $ef0_t2,
+                'ef_tooltip'       => '<ul><li>Table 2.1 Emission Factor (tCO2/MWh) [4] — blended factor: Total Emission [1+2+3] / (Table 2 Total Purchase Electricity / 1000)</li></ul>',
+                'total_emission'   => $em0,
+                'em_tooltip'       => '<ul><li>Table 2 Operational usage for Slab Production (kWh) × Emission Factor (tCO2/MWh) [0] / 1000</li><li>= ' . number_format($operational_kwh, 2) . ' × ' . $ef0_t2 . ' / 1000</li></ul>',
+                'unit'             => 'tCO2',
+            ],
+            [
+                'description'      => 'BF Generation',
+                'emission_factor'  => $ef1_t2,
+                'ef_tooltip'       => '<ul><li>Fixed value: 0 (BF Generation is internal generation, no grid emission factor applied)</li></ul>',
+                'total_emission'   => $em1,
+                'em_tooltip'       => '<ul><li>Table 2 BF Generation (kWh) × Emission Factor (tCO2/MWh) [1] / 1000</li><li>= ' . number_format($bf_kwh, 2) . ' × ' . $ef1_t2 . ' / 1000</li></ul>',
+                'unit'             => 'tCO2',
+            ],
+            [
+                'description'      => 'Purchase (KPE Power)',
+                'emission_factor'  => $ef2_t2,
+                'ef_tooltip'       => '<ul><li>From CHP Power Plant Tab → Table 6, row: "Net Emission / ( Electricity Output/1000 ) (tCO2/MWh)"</li></ul>',
+                'total_emission'   => $em2,
+                'em_tooltip'       => '<ul><li>Table 2 Purchase (KPE Power) (kWh) × Emission Factor (tCO2/MWh) [2] / 1000</li><li>= ' . number_format($kpe_kwh, 2) . ' × ' . $ef2_t2 . ' / 1000</li></ul>',
+                'unit'             => 'tCO2',
+            ],
+            [
+                'description'      => 'Purchase Electricity from PLN',
+                'emission_factor'  => $ef3_t2,
+                'ef_tooltip'       => '<ul><li>Table 1.1 Emission Factor (tCO2/MWh) [1] — PLN national grid emission factor: 0.87</li></ul>',
+                'total_emission'   => $em3,
+                'em_tooltip'       => '<ul><li>Table 2 Purchase Electricity from PLN (kWh) × Emission Factor (tCO2/MWh) [3] / 1000</li><li>= ' . number_format($pln_kwh, 2) . ' × ' . $ef3_t2 . ' / 1000</li></ul>',
+                'unit'             => 'tCO2',
+            ],
+            [
+                'description'      => 'Total',
+                'emission_factor'  => $ef4_display,
+                'ef_tooltip'       => '<ul><li>Total Emission [1+2+3] / (Table 2 Total Purchase Electricity / 1000)</li><li>= ' . $totalEmission . ' / ' . $totalPurchaseMwh . '</li></ul>',
+                'total_emission'   => $totalEmission,
+                'em_tooltip'       => '<ul><li>Total Emission = Emission[BF] + Emission[KPE] + Emission[PLN]</li><li>= ' . $em1 . ' + ' . $em2 . ' + ' . $em3 . '</li></ul>',
+                'unit'             => 'tCO2',
+                'is_total'         => true,
+            ],
+        ]);
     }
 
     // -------------------------------------------------------------------------
@@ -539,6 +802,8 @@ class ConfigurationData extends Component
             'energyTableDataExport'            => $this->energyTableDataExport,
             'energyTableDataImport'            => $this->energyTableDataImport,
             'energyTableDataExportElectricity' => $this->energyTableDataExportElectricity,
+            'emissionTableData11'              => $this->emissionTableData11,
+            'emissionTableData21'              => $this->emissionTableData21,
         ]);
     }
 }
