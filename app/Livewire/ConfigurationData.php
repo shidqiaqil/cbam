@@ -787,6 +787,370 @@ class ConfigurationData extends Component
         ]);
     }
 
+    private function computeTable41Conv3(): float
+    {
+        $t4 = $this->energyTableDataTable4;
+        if ($t4->isEmpty()) return 0.0;
+
+        $smpGeneration = $t4[1]['power'] ?? 0.0;
+        $purchaseKpe   = $t4[2]['power'] ?? 0.0;
+        $totalPurchase = $t4->last()['power'] ?? 0.0;
+
+        $chp = new ConfigurationDataCHP();
+        $chp->periodYear = $this->periodYear;
+        $chp->period     = $this->period;
+        $conv2 = (float) ($chp->steamConversionTableData()->firstWhere('unit', 'tCO2/Tj')['steam'] ?? 0.0);
+
+        $steam1 = $smpGeneration * 0.0;
+        $steam2 = $purchaseKpe   * $conv2;
+
+        $totalSteam = $steam1 + $steam2;
+
+        return $totalPurchase > 0 ? ($totalSteam / $totalPurchase) : 0.0;
+    }
+
+    #[Computed]
+    public function emissionTableData31(): Collection
+    {
+        if (empty($this->periodYear) || empty($this->period)) return collect();
+
+        $t3 = $this->energyTableDataTable3;
+        if ($t3->isEmpty()) return collect();
+
+        $export = $t3[0]['power'] ?? 0.0; // Export to Coke Plant & Vendor
+        $bf     = $t3[1]['power'] ?? 0.0; // BF
+        $smp    = $t3[2]['power'] ?? 0.0; // SMP & CCP + Energy
+
+        // Conv[0],[1],[2] = Table 4.1 Conv[3]
+        $conv = $this->emissionTableData41->firstWhere('is_total', true)['conversion'] ?? 0.0;
+
+        // CHP Table 2.2 conversion[0] = Tj/ton
+        $chp = new ConfigurationDataCHP();
+        $chp->periodYear = $this->periodYear;
+        $chp->period     = $this->period;
+        $chpConv0 = (float) ($chp->steamConversionTableData()->values()[0]['conversion'] ?? 0.0);
+
+        $steam0 = $export * $conv;
+        $steam1 = $bf     * $conv;
+        $steam2 = $smp    * $conv;
+        $steam3 = $steam1 + $steam2; // Total
+        $steam4 = $export * $chpConv0;          // Energy
+        $steam5 = $steam4 > 0 ? ($steam0 / $steam4) : 0.0; // EF Steam
+
+        return collect([
+            [
+                'description' => 'Export to Coke Plant & Vendor',
+                'conversion'  => $conv,
+                'conv_tooltip' => '<ul><li>Table 4.1 Conversion (tCO2/Ton) [3]</li></ul>',
+                'steam'       => $steam0,
+                'st_tooltip'  => '<ul><li>Table 3 Export to Coke Plant & Vendor × Conv[0]</li><li>= ' . $export . ' × ' . $conv . '</li></ul>',
+                'unit'        => 'tCO2',
+            ],
+            [
+                'description' => 'BF',
+                'conversion'  => $conv,
+                'conv_tooltip' => '<ul><li>Table 4.1 Conversion (tCO2/Ton) [3]</li></ul>',
+                'steam'       => $steam1,
+                'st_tooltip'  => '<ul><li>Table 3 BF × Conv[1]</li><li>= ' . $bf . ' × ' . $conv . '</li></ul>',
+                'unit'        => 'tCO2',
+            ],
+            [
+                'description' => 'SMP & CCP + Energy',
+                'conversion'  => $conv,
+                'conv_tooltip' => '<ul><li>Table 4.1 Conversion (tCO2/Ton) [3]</li></ul>',
+                'steam'       => $steam2,
+                'st_tooltip'  => '<ul><li>Table 3 SMP & CCP + Energy × Conv[2]</li><li>= ' . $smp . ' × ' . $conv . '</li></ul>',
+                'unit'        => 'tCO2',
+            ],
+            [
+                'description' => 'Total',
+                'conversion'  => null,
+                'conv_tooltip' => '',
+                'steam'       => $steam3,
+                'st_tooltip'  => '<ul><li>Total = Steam[0] + Steam[1] + Steam[2]</li><li>= ' . $steam0 . ' + ' . $steam1 . ' + ' . $steam2 . '</li></ul>',
+                'unit'        => 'tCO2',
+                'is_total'    => true,
+            ],
+            [
+                'description' => 'Energy',
+                'conversion'  => 'Energy',
+                'conv_tooltip' => '<ul><li>CHP Power Plant Tab → Table 2.2 conversion[0] (Tj/ton)</li></ul>',
+                'steam'       => $steam4,
+                'st_tooltip'  => '<ul><li>Table 3 Export to Coke Plant & Vendor × CHP Table 2.2 conversion[0]</li><li>= ' . $export . ' × ' . $chpConv0 . '</li></ul>',
+                'unit'        => 'Tj',
+            ],
+            [
+                'description' => 'EF Steam',
+                'conversion'  => 'EF Steam',
+                'conv_tooltip' => '<ul><li>Steam[0] / Steam[4] (Energy)</li><li>= ' . $steam0 . ' / ' . $steam4 . '</li></ul>',
+                'steam'       => $steam5,
+                'st_tooltip'  => '<ul><li>Steam[0] / Steam[4] (Energy)</li><li>= ' . $steam0 . ' / ' . $steam4 . '</li></ul>',
+                'unit'        => 'tCO2/Tj',
+            ],
+        ]);
+    }
+
+    #[Computed]
+    public function emissionTableData41(): Collection
+    {
+        if (empty($this->periodYear) || empty($this->period)) return collect();
+
+        $t4 = $this->energyTableDataTable4;
+        if ($t4->isEmpty()) return collect();
+
+        // Table 4 quantities (Ton)
+        $operational   = $t4[0]['power'] ?? 0.0; // Operational usage for Slab Production → row [0]
+        $smpGeneration = $t4[1]['power'] ?? 0.0; // SMP Generation                        → row [1]
+        $purchaseKpe   = $t4[2]['power'] ?? 0.0; // Purchase KPE                          → row [2]
+        $totalPurchase = $t4->last()['power'] ?? 0.0; // Total Purchase Steam
+
+        // CHP Table 2.2
+        $chp = new ConfigurationDataCHP();
+        $chp->periodYear = $this->periodYear;
+        $chp->period     = $this->period;
+        $steamConvData      = $chp->steamConversionTableData()->values();
+        $chpConv0           = (float) ($steamConvData[0]['conversion'] ?? 0.0); // Tj/ton
+        // $conv2              = (float) ($steamConvData[1]['conversion'] ?? 0.0); // EF Steam (tCO2/Tj)
+        $conv2 = (float) ($steamConvData[1]['steam'] ?? 0.0);
+
+        // Conv[1] = 0 (fixed)
+        $conv1 = 0.0;
+
+        // Steam calculations — compute [1] and [2] first to derive Conv[3]
+        $steam1 = $smpGeneration * $conv1; // = 0
+        $steam2 = $purchaseKpe   * $conv2;
+
+        // Conv[3] = Steam[1]+[2] / Total Purchase Steam  (blended EF)
+        $conv3  = $totalPurchase > 0 ? (($steam1 + $steam2) / $totalPurchase) : 0.0;
+
+        // Conv[0] = Conv[3]
+        $conv0  = $conv3;
+        $steam0 = $operational * $conv0;
+
+        // Steam[3] = Total = Steam[1] + Steam[2]
+        $steam3 = $steam1 + $steam2;
+
+        // Steam[4] = Energy = Purchase KPE * CHP Table 2.2 conversion[0]
+        $steam4 = $purchaseKpe * $chpConv0;
+
+        // Steam[5] = EF Steam = Steam[2] / Steam[4]
+        $steam5 = $steam4 > 0 ? ($steam2 / $steam4) : 0.0;
+
+        return collect([
+            [
+                'description' => 'Operational usage for Slab Production',
+                'conversion'  => $conv3,  // Conv[3] shown in conversion column
+                'conv_tooltip' => '<ul><li>Conversion (tCO2/Ton) [3] = Steam[1+2] / Table 4 Total Purchase Steam</li><li>= (' . $steam1 . ' + ' . $steam2 . ') / ' . $totalPurchase . '</li></ul>',
+                'steam'       => $steam0,
+                'st_tooltip'  => '<ul><li>Table 4 Operational usage × Conv[0]</li><li>= ' . $operational . ' × ' . $conv0 . '</li></ul>',
+                'unit'        => 'tCO2',
+            ],
+            [
+                'description' => 'SMP Generation',
+                'conversion'  => $conv1,  // 0 → blade akan tampilkan "-"
+                'conv_tooltip' => '<ul><li>Fixed value: 0</li></ul>',
+                'steam'       => $steam1,
+                'st_tooltip'  => '<ul><li>Table 4 SMP Generation × Conv[1] = 0</li></ul>',
+                'unit'        => 'tCO2',
+            ],
+            [
+                'description' => 'Purchase KPE',
+                'conversion'  => $conv2,  // CHP Table 2.2 conversion[1]
+                'conv_tooltip' => '<ul><li>CHP Power Plant Tab → Table 2.2 conversion[1] (EF Steam tCO2/Tj)</li></ul>',
+                'steam'       => $steam2,
+                'st_tooltip'  => '<ul><li>Table 4 Purchase KPE × Conv[2]</li><li>= ' . $purchaseKpe . ' × ' . $conv2 . '</li></ul>',
+                'unit'        => 'tCO2',
+            ],
+            [
+                'description' => 'Total',
+                'conversion'  => $conv3,  // Steam[3] / Total Purchase Steam
+                'conv_tooltip' => '<ul><li>Steam[1+2] / Table 4 Total Purchase Steam</li><li>= ' . ($steam1 + $steam2) . ' / ' . $totalPurchase . '</li></ul>',
+                'steam'       => $steam3,
+                'st_tooltip'  => '<ul><li>Total = Steam[1] + Steam[2]</li><li>= ' . $steam1 . ' + ' . $steam2 . '</li></ul>',
+                'unit'        => 'tCO2',
+                'is_total'    => true,
+            ],
+            [
+                'description' => 'Energy',
+                'conversion'  => null,  // teks "Energy" tampil di blade
+                'conv_tooltip' => '<ul><li>CHP Power Plant Tab → Table 2.2 conversion[0] (Tj/ton)</li></ul>',
+                'steam'       => $steam4,
+                'st_tooltip'  => '<ul><li>Table 4 Purchase KPE × CHP Table 2.2 conversion[0]</li><li>= ' . $purchaseKpe . ' × ' . $chpConv0 . '</li></ul>',
+                'unit'        => 'Tj',
+            ],
+            [
+                'description' => 'EF Steam',
+                'conversion'  => 'EF Steam',
+                'conv_tooltip' => '<ul><li>Steam[2] / Steam[4] (Energy)</li><li>= ' . $steam2 . ' / ' . $steam4 . '</li></ul>',
+                'steam'       => $steam5,
+                'st_tooltip'  => '<ul><li>Steam[2] / Steam[4] (Energy)</li><li>= ' . $steam2 . ' / ' . $steam4 . '</li></ul>',
+                'unit'        => 'tCO2/Tj',
+            ],
+        ]);
+    }
+
+    #[Computed]
+    public function emissionTableData51(): Collection
+    {
+        if (empty($this->periodYear) || empty($this->period)) return collect();
+
+        $export = $this->energyTableDataExport;
+        if ($export->isEmpty()) return collect();
+
+        $convCog = 0.000018410; // COG
+        $convBfg = 0.000003138; // BFG 
+        $convLdg = 0.000008368; // LDG
+
+        $conversions = [
+            $convCog, // [0] COG for Plate Mill
+            $convCog, // [1] COG for HRP
+            $convCog, // [2] Total COG Sales
+            $convBfg, // [3] BFG for KPE
+            $convLdg, // [4] LDG for KPE
+            $convBfg, // [5] BFG for COP
+        ];
+
+        $rows    = collect();
+        $grandTotal = 0.0;
+
+        foreach ($export as $index => $row) {
+            $conv     = $conversions[$index] ?? 0.0;
+            $byproduct = $row['quantity'] * $conv;
+            $grandTotal += $byproduct;
+
+            $rows->push([
+                'description' => $row['description'],
+                'conversion'  => $conv,
+                'conv_tooltip' => '<ul><li>Conversion factor (TJ/m3) for ' . $row['description'] . '</li></ul>',
+                'byproduct'   => $byproduct,
+                'bp_tooltip'  => '<ul><li>Export ' . $row['description'] . ' × Conversion (TJ/m3)</li><li>= ' . $row['quantity'] . ' × ' . $conv . '</li></ul>',
+                'unit'        => 'Tj',
+            ]);
+        }
+
+        $rows->push([
+            'description' => 'Grand Total',
+            'conversion'  => 'Grand Total',
+            'conv_tooltip' => '',
+            'byproduct'   => $grandTotal,
+            'bp_tooltip'  => '<ul><li>Total By Product Gas [0]:[5]</li></ul>',
+            'unit'        => 'Tj',
+            'is_total'    => true,
+        ]);
+
+        return $rows;
+    }
+    #[Computed]
+    public function emissionTableData61(): Collection
+    {
+        if (empty($this->periodYear) || empty($this->period)) return collect();
+
+        $import = $this->energyTableDataImport;
+        if ($import->isEmpty()) return collect();
+
+        $convCog = 0.000018410;
+
+        $row = $import->first();
+
+        return collect([
+            [
+                'description' => $row['description'],
+                'conversion'  => $convCog,
+                'conv_tooltip' => '<ul><li>Conversion factor (TJ/m3) for COG</li></ul>',
+                'cog'         => $row['quantity'] * $convCog,
+                'cog_tooltip' => '<ul><li>Table 6 ' . $row['description'] . ' × Conversion (TJ/m3)</li><li>= ' . $row['quantity'] . ' × ' . $convCog . '</li></ul>',
+                'unit'        => 'Tj',
+            ],
+        ]);
+    }
+
+    #[Computed]
+    public function emissionTableData71(): Collection
+    {
+        if (empty($this->periodYear) || empty($this->period)) return collect();
+
+        $exportElec = $this->energyTableDataExportElectricity;
+        if ($exportElec->isEmpty()) return collect();
+
+        // EF from Table 2.1 last row (Total) emission_factor
+        $ef = $this->emissionTableData21->last()['emission_factor'] ?? 0.0;
+
+        // Only row [0] Reverse Power and row [1] Export to Coke Plant
+        $rows = collect();
+        foreach ([0, 1] as $index) {
+            $row    = $exportElec->values()[$index] ?? null;
+            if (!$row) continue;
+
+            $emission = $ef * $row['quantity'];
+
+            $rows->push([
+                'description' => $row['description'],
+                'emission_factor' => $ef,
+                'ef_tooltip'  => '<ul><li>Table 2.1 Emission Factor (tCO2/MWh) [4] — blended EF</li></ul>',
+                'total_emission'  => $emission,
+                'em_tooltip'  => '<ul><li>Emission Factor (tCO2/MWh) [0] × Table 7 ' . $row['description'] . ' / 1000</li><li>= ' . $ef . ' × ' . $row['quantity'] . ' / 1000</li></ul>',
+                'unit'        => 'tCO2',
+            ]);
+        }
+
+        return $rows;
+    }
+
+    #[Computed]
+    public function emissionTableData52(): Collection
+    {
+        if (empty($this->periodYear) || empty($this->period)) return collect();
+
+        $t51 = $this->emissionTableData51;
+        if ($t51->isEmpty()) return collect();
+
+        $factors = [44.4, 44.4, 44.4, 260.0, 182.0, 260.0];
+
+        $rows        = collect();
+        $grandTotal  = 0.0;
+
+        foreach ($factors as $index => $factor) {
+            $byproduct = $t51->values()[$index]['byproduct'] ?? 0.0;
+            $emission  = $factor * $byproduct;
+            $grandTotal += $emission;
+
+            $rows->push([
+                'description'    => $t51->values()[$index]['description'] ?? '',
+                'emission_factor' => $factor,
+                'ef_tooltip'     => '<ul><li>Emission Factor (tCO2/Tj) [' . $index . ']</li></ul>',
+                'total_emission' => $emission,
+                'em_tooltip'     => '<ul><li>Emission Factor (tCO2/Tj) [' . $index . '] × Table 5.1 By Product Gas [' . $index . ']</li><li>= ' . $factor . ' × ' . $byproduct . '</li></ul>',
+                'unit'           => 'tCO2',
+            ]);
+        }
+
+        // Grand Total row
+        $rows->push([
+            'description'    => 'Grand Total',
+            'emission_factor' => 'Grand Total',
+            'ef_tooltip'     => '',
+            'total_emission' => $grandTotal,
+            'em_tooltip'     => '<ul><li>Total Emission [0:5]</li></ul>',
+            'unit'           => 'tCO2',
+            'is_total'       => true,
+        ]);
+
+        // Emission Factor row = Grand Total / Table 5.1 Grand Total (byproduct[6])
+        $grandTotalBp = $t51->last()['byproduct'] ?? 0.0;
+        $efRow        = $grandTotalBp > 0 ? ($grandTotal / $grandTotalBp) : 0.0;
+
+        $rows->push([
+            'description'    => 'Emission Factor',
+            'emission_factor' => 'Emission Factor',
+            'ef_tooltip'     => '',
+            'total_emission' => $efRow,
+            'em_tooltip'     => '<ul><li>Total Emission [0:5] / Table 5.1 Grand Total By Product Gas</li><li>= ' . $grandTotal . ' / ' . $grandTotalBp . '</li></ul>',
+            'unit'           => 'tCO2/Tj',
+        ]);
+
+        return $rows;
+    }
+
     // -------------------------------------------------------------------------
     // Render
     // -------------------------------------------------------------------------
@@ -804,6 +1168,12 @@ class ConfigurationData extends Component
             'energyTableDataExportElectricity' => $this->energyTableDataExportElectricity,
             'emissionTableData11'              => $this->emissionTableData11,
             'emissionTableData21'              => $this->emissionTableData21,
+            'emissionTableData31'              => $this->emissionTableData31,
+            'emissionTableData41'              => $this->emissionTableData41,
+            'emissionTableData51'              => $this->emissionTableData51,
+            'emissionTableData61'              => $this->emissionTableData61,
+            'emissionTableData71'              => $this->emissionTableData71,
+            'emissionTableData52' => $this->emissionTableData52,
         ]);
     }
 }
