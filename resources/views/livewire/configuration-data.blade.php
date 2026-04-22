@@ -381,6 +381,45 @@
                                             @endif
                                         </div>{{-- /export-electricity --}}
 
+                                        {{-- Table 8 --}}
+                                        <div class="table-responsive mb-4">
+                                            <h6 class="mb-3 text-primary">Table 8</h6>
+                                            @if($emissionTableData8->isEmpty())
+                                            <div class="alert alert-info">
+                                                <i class="ti ti-info-circle"></i> Select year &amp; period to see Table
+                                                8 data.
+                                            </div>
+                                            @else
+                                            <table class="table table-sm table-bordered">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Description</th>
+                                                        <th class="text-end">Quantity</th>
+                                                        <th class="text-end">Unit</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($emissionTableData8 as $row)
+                                                    <tr>
+                                                        <td>
+                                                            {{ $row['description'] }}
+                                                            @if(!empty($row['tooltip']))
+                                                            <span class="badge badge-sm bg-light text-primary ms-1"
+                                                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                data-bs-html="true" data-bs-custom-class="tooltip-wide"
+                                                                title="{{ $row['tooltip'] }}">i</span>
+                                                            @endif
+                                                        </td>
+                                                        <td class="text-end">{{ number_format((float)$row['quantity'],
+                                                            2) }}</td>
+                                                        <td class="text-end">{{ $row['unit'] }}</td>
+                                                    </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                            @endif
+                                        </div>{{-- /table-8 --}}
+
                                     </div>{{-- /col data energy --}}
 
                                     {{-- RIGHT COLUMN: DATA EMISSION --}}
@@ -671,7 +710,7 @@
                                                             <th class="text-end">By Product Gas</th>
                                                             <th class="text-end">Unit</th>
                                                             {{-- Separator --}}
-                                                            <th class="border-start border-2"></th>
+                                                            <th class="border-start border-0"></th>
                                                             {{-- Table 5.2 --}}
                                                             <th class="text-end">Emission Factor (tCO2/Tj)</th>
                                                             <th class="text-end">Total Emission</th>
@@ -712,7 +751,7 @@
                                                             <td class="text-end">{{ $row51['unit'] }}</td>
 
                                                             {{-- Separator --}}
-                                                            <td class="border-start border-2 p-0"></td>
+                                                            <td class="border-start border-0 p-0"></td>
 
                                                             {{-- Table 5.2 --}}
                                                             @if($row52)
@@ -782,51 +821,114 @@
                                         </div>
 
                                         {{-- ============================================ --}}
-                                        {{-- TABLE 6.1 – COG --}}
+                                        {{-- TABLE 6.1 – COG & 6.2 --}}
                                         {{-- ============================================ --}}
 
                                         <div class="table-responsive mb-4">
-                                            <h6 class="mb-3 text-primary">Table 6.1 – COG</h6>
+                                            <h6 class="mb-3 text-primary">Table 6.1 & 6.2</h6>
                                             @if($emissionTableData61->isEmpty())
                                             <div class="alert alert-info">
                                                 <i class="ti ti-info-circle"></i> Select year &amp; period to see Table
                                                 6.1 data.
                                             </div>
                                             @else
-                                            <table class="table table-sm table-bordered">
-                                                <thead class="table-light">
-                                                    <tr>
-                                                        <th class="text-end">Conversion (TJ/m3)</th>
-                                                        <th class="text-end">COG</th>
-                                                        <th class="text-end">Unit</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach($emissionTableData61 as $row)
-                                                    <tr>
-                                                        <td class="text-end">
-                                                            {{ number_format($row['conversion'], 9) }}
-                                                            @if(!empty($row['conv_tooltip']))
-                                                            <span class="badge badge-sm bg-light text-primary ms-1"
-                                                                data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                data-bs-html="true" data-bs-custom-class="tooltip-wide"
-                                                                title="{{ $row['conv_tooltip'] }}">i</span>
+                                            <div style="overflow-x: auto;">
+                                                <table class="table table-sm table-bordered" style="min-width: 600px;">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th class="text-end">Conversion (TJ/m3)</th>
+                                                            <th class="text-end">COG</th>
+                                                            <th class="text-end">Unit</th>
+                                                            <th class="border-start border-0"></th>
+                                                            <th class="text-end">Emission Factor (tCO2/Tj)</th>
+                                                            <th class="text-end">Total Emission</th>
+                                                            <th class="text-end">Unit</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach($emissionTableData61 as $i => $row61)
+                                                        @php $row62 = $emissionTableData62->values()[$i] ?? null;
+                                                        @endphp
+                                                        <tr>
+                                                            <td class="text-end">
+                                                                {{ number_format((float)$row61['conversion'], 9) }}
+                                                                @if(!empty($row61['conv_tooltip']))
+                                                                <span class="badge badge-sm bg-light text-primary ms-1"
+                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                    data-bs-html="true"
+                                                                    data-bs-custom-class="tooltip-wide"
+                                                                    title="{{ $row61['conv_tooltip'] }}">i</span>
+                                                                @endif
+                                                            </td>
+                                                            <td class="text-end">
+                                                                {{ number_format((float)$row61['cog'], 2) }}
+                                                                @if(!empty($row61['cog_tooltip']))
+                                                                <span class="badge badge-sm bg-light text-primary ms-1"
+                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                    data-bs-html="true"
+                                                                    data-bs-custom-class="tooltip-wide"
+                                                                    title="{{ $row61['cog_tooltip'] }}">i</span>
+                                                                @endif
+                                                            </td>
+                                                            <td class="text-end">{{ $row61['unit'] }}</td>
+                                                            <td class="border-start border-0 p-0"></td>
+                                                            @if($row62)
+                                                            <td class="text-end">
+                                                                @if(!is_numeric($row62['emission_factor']))
+                                                                {{ $row62['emission_factor'] }}
+                                                                @else
+                                                                {{ number_format((float)$row62['emission_factor'], 1) }}
+                                                                @if(!empty($row62['ef_tooltip']))
+                                                                <span class="badge badge-sm bg-light text-primary ms-1"
+                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                    data-bs-html="true"
+                                                                    data-bs-custom-class="tooltip-wide"
+                                                                    title="{{ $row62['ef_tooltip'] }}">i</span>
+                                                                @endif
+                                                                @endif
+                                                            </td>
+                                                            <td class="text-end">
+                                                                {{ number_format((float)($row62['total_emission'] ?? 0),
+                                                                2) }}
+                                                                @if(!empty($row62['em_tooltip']))
+                                                                <span class="badge badge-sm bg-light text-primary ms-1"
+                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                    data-bs-html="true"
+                                                                    data-bs-custom-class="tooltip-wide"
+                                                                    title="{{ $row62['em_tooltip'] }}">i</span>
+                                                                @endif
+                                                            </td>
+                                                            <td class="text-end">{{ $row62['unit'] }}</td>
+                                                            @else
+                                                            <td colspan="3"></td>
                                                             @endif
-                                                        </td>
-                                                        <td class="text-end">
-                                                            {{ number_format($row['cog'], 2) }}
-                                                            @if(!empty($row['cog_tooltip']))
-                                                            <span class="badge badge-sm bg-light text-primary ms-1"
-                                                                data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                data-bs-html="true" data-bs-custom-class="tooltip-wide"
-                                                                title="{{ $row['cog_tooltip'] }}">i</span>
-                                                            @endif
-                                                        </td>
-                                                        <td class="text-end">{{ $row['unit'] }}</td>
-                                                    </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
+                                                        </tr>
+                                                        @endforeach
+                                                        {{-- Extra row untuk Emission Factor di 6.2 --}}
+                                                        @php $lastRow62 = $emissionTableData62->last(); @endphp
+                                                        @if($lastRow62 && !is_numeric($lastRow62['emission_factor']))
+                                                        <tr>
+                                                            <td colspan="3"></td>
+                                                            <td class="border-start border-2 p-0"></td>
+                                                            <td class="text-end">{{ $lastRow62['emission_factor'] }}
+                                                            </td>
+                                                            <td class="text-end">
+                                                                {{ number_format((float)($lastRow62['total_emission'] ??
+                                                                0), 2) }}
+                                                                @if(!empty($lastRow62['em_tooltip']))
+                                                                <span class="badge badge-sm bg-light text-primary ms-1"
+                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                    data-bs-html="true"
+                                                                    data-bs-custom-class="tooltip-wide"
+                                                                    title="{{ $lastRow62['em_tooltip'] }}">i</span>
+                                                                @endif
+                                                            </td>
+                                                            <td class="text-end">{{ $lastRow62['unit'] }}</td>
+                                                        </tr>
+                                                        @endif
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                             @endif
                                         </div>
                                         {{-- ============================================ --}}
@@ -893,75 +995,7 @@
                             {{-- ====================================================== --}}
                             <div class="tab-pane {{ $activeTab === 'steel-plate' ? 'active show' : '' }}"
                                 id="tabs-steel-plate">
-                                <div class="row g-3">
-                                    <div class="col-12 mb-4 filter-section">
-                                        <div class="d-flex align-items-center gap-2 mb-3">
-                                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                                                <path d="M2 4h12M4 8h8M6 12h4" stroke="#378ADD" stroke-width="1.5"
-                                                    stroke-linecap="round" />
-                                            </svg>
-                                            <span class="filter-label">Filter</span>
-                                        </div>
-                                        @if($availableYears->isNotEmpty())
-                                        <div class="row g-2">
-                                            <div class="col-12 col-md-5">
-                                                <label class="form-label">Year</label>
-                                                <select wire:model.live="periodYear" class="form-select">
-                                                    <option value="">Select Year</option>
-                                                    @foreach($availableYears as $year)
-                                                    <option value="{{ $year }}">{{ $year }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="col-12 col-md-5">
-                                                <label class="form-label">Period</label>
-                                                <select wire:model.live="period" class="form-select" {{
-                                                    empty($periodYear) ? 'disabled' : '' }}>
-                                                    <option value="">Select Period</option>
-                                                    <optgroup label="Monthly">
-                                                        <option value="jan">Jan</option>
-                                                        <option value="feb">Feb</option>
-                                                        <option value="mar">Mar</option>
-                                                        <option value="apr">Apr</option>
-                                                        <option value="may">May</option>
-                                                        <option value="jun">Jun</option>
-                                                        <option value="jul">Jul</option>
-                                                        <option value="aug">Aug</option>
-                                                        <option value="sep">Sep</option>
-                                                        <option value="oct">Oct</option>
-                                                        <option value="nov">Nov</option>
-                                                        <option value="dec">Dec</option>
-                                                    </optgroup>
-                                                    <optgroup label="Quarterly">
-                                                        <option value="q1">Q1</option>
-                                                        <option value="q2">Q2</option>
-                                                        <option value="q3">Q3</option>
-                                                        <option value="q4">Q4</option>
-                                                    </optgroup>
-                                                    <option value="yearly">Yearly</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-12 col-md-2">
-                                                <label class="form-label">&nbsp;</label>
-                                                <div class="mt-1">
-                                                    @if(empty($periodYear) || empty($period))
-                                                    <small class="text-muted">Select year and period</small>
-                                                    @else
-                                                    <span class="badge bg-blue-lt">Data for {{ strtoupper($period) }} {{
-                                                        $periodYear }}</span>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </div>
-                                        @endif
-                                    </div>{{-- /filter --}}
-                                    <div class="col-12">
-                                        <h5 class="mb-3">Steel Plate Config</h5>
-                                        <div class="alert alert-info">
-                                            Steel Plate tables coming soon.
-                                        </div>
-                                    </div>
-                                </div>{{-- /row --}}
+                                @livewire('configuration-data-steel-plate')
                             </div>{{-- /tab-pane steel-plate --}}
 
                             {{-- ====================================================== --}}

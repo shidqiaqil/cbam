@@ -83,8 +83,8 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th>Description</th>
-                                        <th>Power</th>
-                                        <th>Unit</th>
+                                        <th class="text-end">Power</th>
+                                        <th class="text-end">Unit</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -99,29 +99,29 @@
                                                 title="{{ $row['tooltip'] }}">i</span>
                                             @endif
                                         </td>
-                                        <td class="text-end">{{ number_format($row['power'], 2) }}</td>
+                                        <td class="text-end">{{ number_format((float)$row['power'], 2) }}</td>
                                         <td class="text-end">MWh</td>
                                     </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                             @endif
-                        </div>
+                        </div>{{-- /table-1 --}}
 
                         {{-- Table 2 --}}
                         <div class="table-responsive mb-4">
                             <h5 class="mb-3">Table 2</h5>
                             @if($hrcTable2Data->isEmpty())
                             <div class="alert alert-info">
-                                <i class="ti ti-info-circle"></i> Select year & period to see Table 2 data.
+                                <i class="ti ti-info-circle"></i> Select year &amp; period to see Table 2 data.
                             </div>
                             @else
                             <table class="table table-sm table-bordered">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Description</th>
-                                        <th>COG</th>
-                                        <th>Unit</th>
+                                        <th class="text-end">COG</th>
+                                        <th class="text-end">Unit</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -136,29 +136,29 @@
                                                 title="{{ $row['tooltip'] }}">i</span>
                                             @endif
                                         </td>
-                                        <td class="text-end">{{ number_format($row['cog'], 2) }}</td>
+                                        <td class="text-end">{{ number_format((float)$row['cog'], 2) }}</td>
                                         <td class="text-end">Nm3</td>
                                     </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                             @endif
-                        </div>
+                        </div>{{-- /table-2 --}}
 
-                        {{-- Table 3 Natural Gas --}}
+                        {{-- Table 3 --}}
                         <div class="table-responsive mb-4">
                             <h5 class="mb-3">Table 3 Natural Gas</h5>
                             @if($hrcTable3Data->isEmpty())
                             <div class="alert alert-info">
-                                <i class="ti ti-info-circle"></i> Select year & period to see Table 3 data.
+                                <i class="ti ti-info-circle"></i> Select year &amp; period to see Table 3 data.
                             </div>
                             @else
                             <table class="table table-sm table-bordered">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Description</th>
-                                        <th>Quantity</th>
-                                        <th>Unit</th>
+                                        <th class="text-end">Quantity</th>
+                                        <th class="text-end">Unit</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -173,14 +173,14 @@
                                                 title="{{ $row['tooltip'] }}">i</span>
                                             @endif
                                         </td>
-                                        <td class="text-end">{{ number_format($row['quantity'], 2) }}</td>
+                                        <td class="text-end">{{ number_format((float)$row['quantity'], 2) }}</td>
                                         <td class="text-end">Nm3</td>
                                     </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                             @endif
-                        </div>
+                        </div>{{-- /table-3 --}}
 
                     </div>
                     {{-- END LEFT SIDE --}}
@@ -188,10 +188,10 @@
                     {{-- RIGHT SIDE --}}
                     <div class="col-lg-6">
 
-                        {{-- Table 1.1 Emission --}}
+                        {{-- Table 1.1 --}}
                         <div class="table-responsive mb-4">
                             <h5 class="mb-3">Table 1.1 Emission</h5>
-                            @if($hrcEmissionTableData->isEmpty())
+                            @if($hrcTable11Data->isEmpty())
                             <div class="alert alert-info">
                                 <i class="ti ti-info-circle"></i> No data available.
                             </div>
@@ -199,102 +199,252 @@
                             <table class="table table-sm table-bordered">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Emission Factor (tCO2/Mwh)</th>
-                                        <th>Total Emission</th>
-                                        <th>Unit</th>
+                                        <th class="text-end">Emission Factor (tCO2/MWh)</th>
+                                        <th class="text-end">Total Emission</th>
+                                        <th class="text-end">Unit</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($hrcEmissionTableData as $row)
+                                    @foreach($hrcTable11Data as $row)
                                     <tr>
                                         <td class="text-end">
-                                            @if($row['tooltip'])
-                                            <span class="badge badge-sm bg-light text-primary ms-1"
-                                                data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
-                                                data-bs-custom-class="tooltip-wide"
-                                                title="{{ $row['tooltip'] }}">i</span>
-                                            @endif
-                                            {{ $row['ef_value'] }}
-                                        </td>
-                                        <td class="text-end">{{ $row['total_emission'] }}</td>
-                                        <td class="text-end">{{ $row['unit'] }}</td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                            @endif
-                        </div>
-
-                        {{-- Table 2.2 --}}
-                        <table class="table table-sm table-bordered">
-                            <h5 class="mb-3">Table 2.2</h5>
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Conversion (TJ/m3)</th>
-                                    <th>By Product Gas</th>
-                                    <th>Unit</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($hrcTable22Data as $row)
-                                <tr>
-                                    <td class="text-end">
-                                        @if(!empty($row['tooltip']))
-                                        <span class="badge badge-sm bg-light text-primary ms-1" data-bs-toggle="tooltip"
-                                            data-bs-placement="top" data-bs-html="true"
-                                            data-bs-custom-class="tooltip-wide" title="{{ $row['tooltip'] }}">i</span>
-                                        @endif
-                                        {{ $row['conversion_factor'] }}
-                                    </td>
-                                    <td class="text-end">{{ $row['total_tj'] }}</td> {{-- nilai hasil perhitungan --}}
-                                    <td class="text-end">{{ $row['unit'] }}</td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-
-                        {{-- Table 3.3 By Product Gas (Natural Gas) --}}
-                        <div class="table-responsive mb-4">
-                            <h5 class="mb-3">Table 3.3 By Product Gas</h5>
-                            @if($hrcTable33Data->isEmpty())
-                            <div class="alert alert-info">
-                                <i class="ti ti-info-circle"></i> No data available.
-                            </div>
-                            @else
-                            <table class="table table-sm table-bordered">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Conversion (TJ/m3)</th>
-                                        <th>By Product Gas</th>
-                                        <th>Unit</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($hrcTable33Data as $row)
-                                    <tr>
-                                        <td class="text-end">
+                                            {{ number_format((float)$row['emission_factor'], 4) }}
                                             @if(!empty($row['tooltip']))
                                             <span class="badge badge-sm bg-light text-primary ms-1"
                                                 data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
                                                 data-bs-custom-class="tooltip-wide"
                                                 title="{{ $row['tooltip'] }}">i</span>
                                             @endif
-                                            {{ $row['conversion_factor'] }}
                                         </td>
-                                        <td class="text-end">{{ $row['total_tj'] }}</td>
+                                        <td class="text-end">{{ number_format((float)$row['total_emission'], 2) }}</td>
                                         <td class="text-end">{{ $row['unit'] }}</td>
                                     </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                             @endif
-                        </div>
+                        </div>{{-- /table-1.1 --}}
+
+                        {{-- Table 2.1 --}}
+                        <div class="table-responsive mb-4">
+                            <h5 class="mb-3">Table 2.1</h5>
+                            @if($hrcTable21Data->isEmpty())
+                            <div class="alert alert-info">
+                                <i class="ti ti-info-circle"></i> No data available.
+                            </div>
+                            @else
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-end">Conversion (TJ/m3)</th>
+                                        <th class="text-end">By Product Gas</th>
+                                        <th class="text-end">Unit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($hrcTable21Data as $row)
+                                    <tr>
+                                        <td class="text-end">
+                                            {{ number_format((float)$row['conversion_factor'], 9) }}
+                                            @if(!empty($row['tooltip']))
+                                            <span class="badge badge-sm bg-light text-primary ms-1"
+                                                data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
+                                                data-bs-custom-class="tooltip-wide"
+                                                title="{{ $row['tooltip'] }}">i</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-end">{{ number_format((float)$row['by_product_gas'], 2) }}</td>
+                                        <td class="text-end">{{ $row['unit'] }}</td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                            @endif
+                        </div>{{-- /table-2.1 --}}
+
+                        {{-- Table 3.1 --}}
+                        <div class="table-responsive mb-4">
+                            <h5 class="mb-3">Table 3.1 By Product Gas</h5>
+                            @if($hrcTable31Data->isEmpty())
+                            <div class="alert alert-info">
+                                <i class="ti ti-info-circle"></i> No data available.
+                            </div>
+                            @else
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-end">Conversion (TJ/m3)</th>
+                                        <th class="text-end">By Product Gas</th>
+                                        <th class="text-end">Unit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($hrcTable31Data as $row)
+                                    <tr>
+                                        <td class="text-end">
+                                            {{ number_format((float)$row['conversion_factor'], 9) }}
+                                            @if(!empty($row['tooltip']))
+                                            <span class="badge badge-sm bg-light text-primary ms-1"
+                                                data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
+                                                data-bs-custom-class="tooltip-wide"
+                                                title="{{ $row['tooltip'] }}">i</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-end">{{ number_format((float)$row['by_product_gas'], 2) }}</td>
+                                        <td class="text-end">{{ $row['unit'] }}</td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                            @endif
+                        </div>{{-- /table-3.1 --}}
 
                     </div>
                     {{-- END RIGHT SIDE --}}
 
-                </div>
-                {{-- END row g-4 --}}
+                </div>{{-- /row g-4 --}}
+
+                {{-- ================================================================ --}}
+                {{-- TABLE 4, 5, 6 — full width --}}
+                {{-- ================================================================ --}}
+                <div class="col-12">
+
+                    {{-- Table 4 --}}
+                    <div class="table-responsive mb-4">
+                        <h6 class="mb-3 text-primary">Table 4 – Natural Gas</h6>
+                        @if($hrcTable4Data->isEmpty())
+                        <div class="alert alert-info">
+                            <i class="ti ti-info-circle"></i> Select year &amp; period to see Table 4 data.
+                        </div>
+                        @else
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Description</th>
+                                    <th class="text-end">Natural Gas</th>
+                                    <th class="text-end">Unit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($hrcTable4Data as $row)
+                                <tr>
+                                    <td>
+                                        {{ $row['description'] }}
+                                        @if(!empty($row['tooltip']))
+                                        <span class="badge badge-sm bg-light text-primary ms-1" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" data-bs-html="true"
+                                            data-bs-custom-class="tooltip-wide" title="{{ $row['tooltip'] }}">i</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-end">{{ number_format((float)$row['natural_gas'], 2) }}</td>
+                                    <td class="text-end">{{ $row['unit'] }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                        @endif
+                    </div>{{-- /table-4 --}}
+
+                    {{-- Table 5 --}}
+                    <div class="table-responsive mb-4">
+                        <h6 class="mb-3 text-primary">Table 5 – Electricity Summary</h6>
+                        @if($hrcTable5Data->isEmpty())
+                        <div class="alert alert-info">
+                            <i class="ti ti-info-circle"></i> Select year &amp; period to see Table 5 data.
+                        </div>
+                        @else
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Items</th>
+                                    <th class="text-end">MWh</th>
+                                    <th class="text-end">EF</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($hrcTable5Data as $row)
+                                <tr @class(['table-active fw-bold'=> $row['items'] === 'Electricity Total'])>
+                                    <td>
+                                        {{ $row['items'] }}
+                                        @if(!empty($row['tooltip']))
+                                        <span class="badge badge-sm bg-light text-primary ms-1" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" data-bs-html="true"
+                                            data-bs-custom-class="tooltip-wide" title="{{ $row['tooltip'] }}">i</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-end">
+                                        @if($row['mwh'] !== null)
+                                        {{ number_format((float)$row['mwh'], 2) }}
+                                        @else
+                                        <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-end">
+                                        @if($row['ef'] !== null)
+                                        {{ number_format((float)$row['ef'], 4) }}
+                                        @if(!empty($row['ef_tooltip']))
+                                        <span class="badge badge-sm bg-light text-primary ms-1" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" data-bs-html="true"
+                                            data-bs-custom-class="tooltip-wide"
+                                            title="{{ $row['ef_tooltip'] }}">i</span>
+                                        @endif
+                                        @else
+                                        <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                        @endif
+                    </div>{{-- /table-5 --}}
+
+                    {{-- Table 6 --}}
+                    <div class="table-responsive mb-4">
+                        <h6 class="mb-3 text-primary">Table 6 – By Product Gas Emission</h6>
+                        @if($hrcTable6Data->isEmpty())
+                        <div class="alert alert-info">
+                            <i class="ti ti-info-circle"></i> Select year &amp; period to see Table 6 data.
+                        </div>
+                        @else
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-end">Emission Factor (tCO2/TJ)</th>
+                                    <th class="text-end">Total Emission</th>
+                                    <th class="text-end">Unit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($hrcTable6Data as $row)
+                                <tr>
+                                    <td class="text-end">
+                                        {{ number_format((float)$row['emission_factor'], 1) }}
+                                        @if(!empty($row['ef_tooltip']))
+                                        <span class="badge badge-sm bg-light text-primary ms-1" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" data-bs-html="true"
+                                            data-bs-custom-class="tooltip-wide"
+                                            title="{{ $row['ef_tooltip'] }}">i</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-end">
+                                        {{ number_format((float)$row['total_emission'], 2) }}
+                                        @if(!empty($row['em_tooltip']))
+                                        <span class="badge badge-sm bg-light text-primary ms-1" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" data-bs-html="true"
+                                            data-bs-custom-class="tooltip-wide"
+                                            title="{{ $row['em_tooltip'] }}">i</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-end">{{ $row['unit'] }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                        @endif
+                    </div>{{-- /table-6 --}}
+
+                </div>{{-- /col full width --}}
 
             </div>
         </div>

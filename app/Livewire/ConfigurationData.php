@@ -1151,6 +1151,80 @@ class ConfigurationData extends Component
         return $rows;
     }
 
+    #[Computed]
+    public function emissionTableData62(): Collection
+    {
+        if (empty($this->periodYear) || empty($this->period)) return collect();
+
+        $t61 = $this->emissionTableData61;
+        if ($t61->isEmpty()) return collect();
+
+        $factor  = 44.4;
+        $cog0    = $t61->first()['cog'] ?? 0.0;
+        $emission = $factor * $cog0;
+        $ef       = $cog0 > 0 ? ($emission / $cog0) : 0.0;
+
+        return collect([
+            [
+                'emission_factor' => $factor,
+                'ef_tooltip'      => '<ul><li>Emission Factor (tCO2/Tj) [0]</li></ul>',
+                'total_emission'  => $emission,
+                'em_tooltip'      => '<ul><li>Emission Factor (tCO2/Tj) [0] × Table 6.1 COG [0]</li><li>= ' . $factor . ' × ' . $cog0 . '</li></ul>',
+                'unit'            => 'tCO2',
+            ],
+            [
+                'emission_factor' => 'Emission Factor',
+                'ef_tooltip'      => '',
+                'total_emission'  => $ef,
+                'em_tooltip'      => '<ul><li>Total Emission [0] / Table 6.1 COG [0]</li><li>= ' . $emission . ' / ' . $cog0 . '</li></ul>',
+                'unit'            => 'tCO2/Tj',
+            ],
+        ]);
+    }
+
+    #[Computed]
+    public function emissionTableData8(): Collection
+    {
+        if (empty($this->periodYear) || empty($this->period)) return collect();
+
+        // Table 6 source[0] = Export Electricity row[0] (Reverse Power) / 1000
+        $exportElec  = $this->energyTableDataTable2;
+        $source0     = ($exportElec->values()[0]['power'] ?? 0.0) / 1000;
+
+        // Table 2.1 total emission [0] = emissionTableData21 row[0] total_emission
+        $t21Em0 = $this->emissionTableData21->values()[0]['total_emission'] ?? 0.0;
+
+        // Table 4.1 steam [0] = emissionTableData41 row[0] steam
+        $t41Steam0 = $this->emissionTableData41->values()[0]['steam'] ?? 0.0;
+
+        // Steel HRC Table 2.1 By Product Gas [0]
+        $hrc = new ConfigurationDataHRC();
+        $hrc->periodYear = $this->periodYear;
+        $hrc->period     = $this->period;
+        $hrcBpg0 = $hrc->hrcTable21Data->first()['by_product_gas'] ?? 0.0;
+
+        return collect([
+            [
+                'description' => 'Operational usage for Slab Production',
+                'tooltip'     => '<ul><li>Table 6 Source[0] (Reverse Power) / 1000</li><li>= ' . ($exportElec->values()[0]['quantity'] ?? 0.0) . ' / 1000</li></ul>',
+                'quantity'    => $source0,
+                'unit'        => '',
+            ],
+            [
+                'description' => 'Indirect slab',
+                'tooltip'     => '<ul><li>Table 2.1 Total Emission [0] + Table 4.1 Steam [0]</li><li>= ' . $t21Em0 . ' + ' . $t41Steam0 . '</li></ul>',
+                'quantity'    => $t21Em0 + $t41Steam0,
+                'unit'        => 'tCO2',
+            ],
+            [
+                'description' => 'Indirect total (masih salah formula)',
+                'tooltip'     => '<ul><li>Table 4.1 Steam [0] + Steel HRC Tab → Table 2.1 By Product Gas [0]</li><li>= ' . $t41Steam0 . ' + ' . $hrcBpg0 . '</li></ul>',
+                'quantity'    => $t41Steam0 + $hrcBpg0,
+                'unit'        => 'tCO2',
+            ],
+        ]);
+    }
+
     // -------------------------------------------------------------------------
     // Render
     // -------------------------------------------------------------------------
@@ -1174,6 +1248,8 @@ class ConfigurationData extends Component
             'emissionTableData61'              => $this->emissionTableData61,
             'emissionTableData71'              => $this->emissionTableData71,
             'emissionTableData52' => $this->emissionTableData52,
+            'emissionTableData62' => $this->emissionTableData62,
+            'emissionTableData8' => $this->emissionTableData8,
         ]);
     }
 }

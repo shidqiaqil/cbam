@@ -20,10 +20,10 @@ class ConfigurationDataHRC extends Component
     public string $periodYear = '';
 
     #[Url]
-    public string $period = ''; // jan, feb, ..., q1, q2, q3, q4, yearly
+    public string $period = '';
 
     // =========================================================================
-    // ROW DEFINITIONS FOR TABLE 1
+    // ROW DEFINITIONS
     // =========================================================================
 
     protected array $hrcRowsTable1 = [
@@ -33,7 +33,7 @@ class ConfigurationDataHRC extends Component
             'conditions'  => [
                 ['plant_code' => 'IHA000', 'plant_name' => 'Hot Strip Mill', 'criteria' => 'CONSUMPTION', 'energy_name' => 'POWER'],
             ],
-            'formula' => '/1000', // Convert kWh to MWh
+            'formula' => '/1000',
         ],
     ];
 
@@ -86,10 +86,10 @@ class ConfigurationDataHRC extends Component
         ];
 
         return match (true) {
-            $this->period === 'yearly'            => array_values($monthMap),
-            isset($quarterMap[$this->period])     => $quarterMap[$this->period],
-            isset($monthMap[$this->period])       => [$monthMap[$this->period]],
-            default                               => [],
+            $this->period === 'yearly'         => array_values($monthMap),
+            isset($quarterMap[$this->period])  => $quarterMap[$this->period],
+            isset($monthMap[$this->period])    => [$monthMap[$this->period]],
+            default                            => [],
         };
     }
 
@@ -137,7 +137,7 @@ class ConfigurationDataHRC extends Component
             return [
                 'description' => $rowDef['description'],
                 'tooltip'     => $rowDef['tooltip'] ?? '',
-                $valueKey     => round($value, 2),
+                $valueKey     => (float) $value,
             ];
         });
     }
@@ -154,7 +154,7 @@ class ConfigurationDataHRC extends Component
     }
 
     // =========================================================================
-    // COMPUTED PROPERTIES
+    // COMPUTED – FILTER
     // =========================================================================
 
     #[Computed]
@@ -166,12 +166,42 @@ class ConfigurationDataHRC extends Component
             ->values();
     }
 
+    // =========================================================================
+    // COMPUTED – TABLE 1: Power
+    // =========================================================================
+
     #[Computed]
     public function hrcTable1Data(): Collection
     {
         if (empty($this->periodYear) || empty($this->period)) return collect();
         return $this->buildTableData($this->hrcRowsTable1, 'power');
     }
+
+    // =========================================================================
+    // COMPUTED – TABLE 1.1: Emission from Table 1
+    // =========================================================================
+
+    #[Computed]
+    public function hrcTable11Data(): Collection
+    {
+        if (empty($this->periodYear) || empty($this->period)) return collect();
+
+        $powerHrp = $this->hrcTable1Data->first()['power'] ?? 0.0;
+        $ef       = 0.87; // tCO2/MWh
+
+        return collect([
+            [
+                'emission_factor' => $ef,
+                'total_emission'  => $powerHrp * $ef,
+                'unit'            => 'tCO2',
+                'tooltip'         => '<ul><li>Table 1 Power HRP Plant × Emission Factor (tCO2/MWh) [0]</li><li>= ' . $powerHrp . ' × ' . $ef . '</li></ul>',
+            ],
+        ]);
+    }
+
+    // =========================================================================
+    // COMPUTED – TABLE 2: COG
+    // =========================================================================
 
     #[Computed]
     public function hrcTable2Data(): Collection
@@ -180,6 +210,33 @@ class ConfigurationDataHRC extends Component
         return $this->buildTableData($this->hrcRowsTable2, 'cog');
     }
 
+    // =========================================================================
+    // COMPUTED – TABLE 2.1: By Product Gas from COG
+    // =========================================================================
+
+    #[Computed]
+    public function hrcTable21Data(): Collection
+    {
+        if (empty($this->periodYear) || empty($this->period)) return collect();
+
+        $cogHrp           = $this->hrcTable2Data->first()['cog'] ?? 0.0;
+        $conversionFactor = 0.000018410; // TJ/m3
+        $totalTJ          = $cogHrp * $conversionFactor;
+
+        return collect([
+            [
+                'conversion_factor' => $conversionFactor,
+                'by_product_gas'    => $totalTJ,
+                'unit'              => 'Tj',
+                'tooltip'           => '<ul><li>Table 2 COG for HRP (Nm3) × Conversion Factor (TJ/m3) [0]</li><li>= ' . $cogHrp . ' × ' . $conversionFactor . '</li></ul>',
+            ],
+        ]);
+    }
+
+    // =========================================================================
+    // COMPUTED – TABLE 3: Natural Gas
+    // =========================================================================
+
     #[Computed]
     public function hrcTable3Data(): Collection
     {
@@ -187,60 +244,136 @@ class ConfigurationDataHRC extends Component
         return $this->buildTableData($this->hrcRowsTable3, 'quantity');
     }
 
-    #[Computed]
-    public function hrcEmissionTableData(): Collection
-    {
-        $rows1    = $this->hrcTable1Data();
-        $powerHrp = $rows1->first()['power'] ?? 0.0;
-        $ef       = 0.87; // tCO2/MWh
-
-        return collect([
-            [
-                'ef_value'       => number_format($ef, 4),
-                'total_emission' => number_format($powerHrp * $ef, 2),
-                'unit'           => 'tCO2',
-                'tooltip'        => 'Table 1 Power HRP Plant * Emission Factor (tCO2/Mwh)[0]',
-            ],
-        ]);
-    }
-
-    // -------------------------------------------------------------------------
-    // NEW: Table 2.2 — 3.3 
-    // -------------------------------------------------------------------------
+    // =========================================================================
+    // COMPUTED – TABLE 3.1: By Product Gas from Natural Gas
+    // =========================================================================
 
     #[Computed]
-    public function hrcTable22Data(): Collection
+    public function hrcTable31Data(): Collection
     {
-        $rows2   = $this->hrcTable2Data();
-        $cogHrp  = $rows2->first()['cog'] ?? 0.0; // Nm3
-        $conversionFactor = 0.000018410; // TJ/m3 (= TJ/Nm3)
-        $totalTJ = $cogHrp * $conversionFactor;
+        if (empty($this->periodYear) || empty($this->period)) return collect();
 
-        return collect([
-            [
-                'conversion_factor' => number_format($conversionFactor, 9), // 0.000018410
-                'by_product_gas'    => 'Table 2 COG for HRP * TJ Conversion (TJ/m3)[0]',
-                'total_tj'          => number_format($totalTJ, 1),
-                'unit'              => 'TJ',
-                'tooltip'           => 'Table 2 COG for HRP (Nm3) * Conversion Factor (TJ/m3)',
-            ],
-        ]);
-    }
-
-    #[Computed]
-    public function hrcTable33Data(): Collection
-    {
-        $rows3            = $this->hrcTable3Data();
-        $ngQty            = $rows3->first()['quantity'] ?? 0.0; // Nm3
+        $ngQty            = $this->hrcTable3Data->first()['quantity'] ?? 0.0;
         $conversionFactor = 0.000036915; // TJ/m3
         $totalTJ          = $ngQty * $conversionFactor;
 
         return collect([
             [
-                'conversion_factor' => number_format($conversionFactor, 9),
-                'total_tj'          => number_format($totalTJ, 1),
-                'unit'              => 'TJ',
-                'tooltip'           => 'Table 3 Natural Gas (Nm3) * Conversion Factor (TJ/m3)[0]',
+                'conversion_factor' => $conversionFactor,
+                'by_product_gas'    => $totalTJ,
+                'unit'              => 'Tj',
+                'tooltip'           => '<ul><li>Table 3 Natural Gas (Nm3) × Conversion Factor (TJ/m3) [0]</li><li>= ' . $ngQty . ' × ' . $conversionFactor . '</li></ul>',
+            ],
+        ]);
+    }
+
+    // =========================================================================
+    // COMPUTED – TABLE 4: Natural Gas Total
+    // =========================================================================
+
+    #[Computed]
+    public function hrcTable4Data(): Collection
+    {
+        if (empty($this->periodYear) || empty($this->period)) return collect();
+
+        $steelPlate = new ConfigurationDataSteelPlate();
+        $steelPlate->periodYear = $this->periodYear;
+        $steelPlate->period     = $this->period;
+
+        $byproduct0Plate = $steelPlate->steelPlateTable21()->first()['byproduct'] ?? 0.0;
+
+        $cogHrp        = $this->hrcTable2Data->first()['cog'] ?? 0.0;
+        $byproduct0Hrc = $cogHrp * 0.000018410;
+
+        $naturalGas = $byproduct0Plate + $byproduct0Hrc;
+
+        return collect([
+            [
+                'description' => 'COG PM + HRP',
+                'tooltip'     => '<ul><li>Steel Plate Tab → Table 2.1 By Product Gas [0] + HRC Tab → Table 2.1 By Product Gas [0]</li><li>= ' . $byproduct0Plate . ' + ' . $byproduct0Hrc . '</li></ul>',
+                'natural_gas' => $naturalGas,
+                'unit'        => 'Tj',
+            ],
+        ]);
+    }
+
+    // =========================================================================
+    // COMPUTED – TABLE 5: Electricity Summary
+    // =========================================================================
+
+    #[Computed]
+    public function hrcTable5Data(): Collection
+    {
+        if (empty($this->periodYear) || empty($this->period)) return collect();
+
+        $steelPlate = new ConfigurationDataSteelPlate();
+        $steelPlate->periodYear = $this->periodYear;
+        $steelPlate->period     = $this->period;
+
+        $platePower = $steelPlate->steelPlateTable1()->first()['power']            ?? 0.0;
+        $plateEf    = $steelPlate->steelPlateTable11()->first()['emission_factor'] ?? 0.0;
+
+        $hrcPower = $this->hrcTable1Data->first()['power'] ?? 0.0;
+        $hrcEf    = $this->hrcTable11Data->first()['emission_factor'] ?? 0.87;
+
+        $totalMwh = $platePower + $hrcPower;
+        $totalEf  = $totalMwh > 0
+            ? (($platePower * $plateEf) + ($hrcPower * $hrcEf)) / $totalMwh
+            : 0.0;
+
+        return collect([
+            [
+                'items'      => 'Electricity Total',
+                'tooltip'    => '<ul><li>Steel Plate Tab → Table 1 Power[0] + Steel HRC Tab → Table 1 Power[0]</li></ul>',
+                'mwh'        => $totalMwh,
+                'ef'         => $totalEf,
+                'ef_tooltip' => '<ul><li>((MWh[Plate] × EF[Plate]) + (MWh[HRC] × EF[HRC])) / MWh[Total]</li><li>= ((' . $platePower . ' × ' . $plateEf . ') + (' . $hrcPower . ' × ' . $hrcEf . ')) / ' . $totalMwh . '</li></ul>',
+            ],
+            [
+                'items'      => 'Plate',
+                'tooltip'    => '<ul><li>Steel Plate Tab → Table 1 Power[0]</li></ul>',
+                'mwh'        => $platePower,
+                'ef'         => $plateEf,
+                'ef_tooltip' => '<ul><li>Steel Plate Tab → Table 1.1 Emission Factor (tCO2/MWh) [0]</li></ul>',
+            ],
+            [
+                'items'      => 'HRP',
+                'tooltip'    => '<ul><li>Steel HRC Tab → Table 1 Power[0]</li></ul>',
+                'mwh'        => $hrcPower,
+                'ef'         => $hrcEf,
+                'ef_tooltip' => '<ul><li>Steel HRC Tab → Table 1.1 Emission Factor (tCO2/MWh) [0]</li></ul>',
+            ],
+            [
+                'items'      => 'Plate+HRC (Ton)',
+                'tooltip'    => '<ul><li>TBA</li></ul>',
+                'mwh'        => null,
+                'ef'         => null,
+                'ef_tooltip' => '',
+            ],
+        ]);
+    }
+
+    // =========================================================================
+    // COMPUTED – TABLE 6: By Product Gas Emission
+    // =========================================================================
+
+    #[Computed]
+    public function hrcTable6Data(): Collection
+    {
+        if (empty($this->periodYear) || empty($this->period)) return collect();
+
+        $byproduct0 = $this->hrcTable31Data->first()['by_product_gas'] ?? 0.0;
+
+        $factor   = 56.1;
+        $emission = $byproduct0 * $factor;
+
+        return collect([
+            [
+                'emission_factor' => $factor,
+                'ef_tooltip'      => '<ul><li>Emission Factor (tCO2/TJ) [0] = 56.1</li></ul>',
+                'total_emission'  => $emission,
+                'em_tooltip'      => '<ul><li>Table 2.1 By Product Gas [0] × Emission Factor (tCO2/TJ) [0]</li><li>= ' . $byproduct0 . ' × ' . $factor . '</li></ul>',
+                'unit'            => 'tCO2',
             ],
         ]);
     }
@@ -252,13 +385,16 @@ class ConfigurationDataHRC extends Component
     public function render()
     {
         return view('livewire.configuration-data-hrc', [
-            'availableYears'       => $this->availableYears,
-            'hrcTable1Data'        => $this->hrcTable1Data,
-            'hrcTable2Data'        => $this->hrcTable2Data,
-            'hrcEmissionTableData' => $this->hrcEmissionTableData,
-            'hrcTable22Data'       => $this->hrcTable22Data,  // ← NEW
-            'hrcTable3Data'        => $this->hrcTable3Data,   // ← NEW
-            'hrcTable33Data'       => $this->hrcTable33Data,  // ← N
+            'availableYears'  => $this->availableYears,
+            'hrcTable1Data'   => $this->hrcTable1Data,
+            'hrcTable11Data'  => $this->hrcTable11Data,
+            'hrcTable2Data'   => $this->hrcTable2Data,
+            'hrcTable21Data'  => $this->hrcTable21Data,
+            'hrcTable3Data'   => $this->hrcTable3Data,
+            'hrcTable31Data'  => $this->hrcTable31Data,
+            'hrcTable4Data'   => $this->hrcTable4Data,
+            'hrcTable5Data'   => $this->hrcTable5Data,
+            'hrcTable6Data'   => $this->hrcTable6Data,
         ]);
     }
 }
