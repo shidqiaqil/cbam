@@ -5,6 +5,8 @@ namespace App\Livewire;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\MasterPco;
+use App\Models\MasterPcoCoil;
+use App\Models\MasterPcoPlate;
 use Livewire\Attributes\Url;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
@@ -64,12 +66,13 @@ class PcoMaster extends Component
 
         $fullMonth = strtolower($monthMap[$this->deleteMonth] ?? $this->deleteMonth);
 
-        $deletedCount = MasterPco::where('period_year', $this->deleteYear)
+        $modelClass = $this->getModelClass();
+        $deletedCount = $modelClass::where('period_year', $this->deleteYear)
             ->whereRaw('LOWER(period_month) = ?', [$fullMonth])
             ->delete();
 
-
-        session()->flash('message', "Berhasil hapus {$deletedCount} record(s) {$this->deleteYear} {$this->deleteMonth}.");
+        $tabName = ucfirst(str_replace('_', ' ', $this->activeTab));
+        session()->flash('message', "Berhasil hapus {$deletedCount} record(s) {$tabName} {$this->deleteYear} {$this->deleteMonth}.");
         session()->flash('message_type', 'success');
         $this->closeDeleteModal();
         $this->resetPage();
@@ -112,9 +115,20 @@ class PcoMaster extends Component
         return collect(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
     }
 
+    private function getModelClass(): string
+    {
+        return match ($this->activeTab) {
+            'pco_coil' => MasterPcoCoil::class,
+            'pco_plate' => MasterPcoPlate::class,
+            default => MasterPco::class,
+        };
+    }
+
     public function getYearsProperty()
     {
-        return MasterPco::distinct()
+        $modelClass = $this->getModelClass();
+
+        return $modelClass::distinct()
             ->orderByDesc('period_year')
             ->pluck('period_year');
     }
@@ -140,14 +154,19 @@ class PcoMaster extends Component
 
     public function getPcoDataProperty()
     {
-        $rawData = MasterPco::query();
+        $modelClass = $this->getModelClass();
+        $rawData = $modelClass::query();
 
         if (!empty($this->search)) {
             $rawData->where(function ($q) {
                 $q->where('plant', 'like', '%' . $this->search . '%')
-                    ->orWhere('period_year', 'like', '%' . $this->search . '%')
-                    ->orWhere('criteria', 'like', '%' . $this->search . '%')
-                    ->orWhere('unit', 'like', '%' . $this->search . '%');
+                    ->orWhere('period_year', 'like', '%' . $this->search . '%');
+                if ($this->activeTab === 'pco') {
+                    $q->orWhere('criteria', 'like', '%' . $this->search . '%')
+                        ->orWhere('unit', 'like', '%' . $this->search . '%');
+                } else {
+                    $q->orWhere('class', 'like', '%' . $this->search . '%');
+                }
             });
         }
 
@@ -174,14 +193,14 @@ class PcoMaster extends Component
             'december' => 'Dec',
         ];
 
-        // Group by unique row identity (period_year, plant, criteria, unit)
-        $grouped = $rawData->groupBy(function ($record) {
-            return implode('|', [
-                $record->period_year,
-                $record->plant,
-                $record->criteria,
-                $record->unit,
-            ]);
+        // Group by unique row identity
+        $groupFields = $this->activeTab === 'pco' ? ['period_year', 'plant', 'criteria', 'unit'] : ['period_year', 'plant', 'class'];
+        $grouped = $rawData->groupBy(function ($record) use ($groupFields) {
+            $fields = [];
+            foreach ($groupFields as $field) {
+                $fields[] = $record->{$field} ?? '';
+            }
+            return implode('|', $fields);
         });
 
         foreach ($grouped as $records) {
@@ -190,9 +209,13 @@ class PcoMaster extends Component
             $row = [
                 'Plant' => $first->plant,
                 'Year' => $first->period_year,
-                'Criteria' => $first->criteria,
-                'Unit' => $first->unit,
             ];
+            if ($this->activeTab === 'pco') {
+                $row['Criteria'] = $first->criteria;
+                $row['Unit'] = $first->unit;
+            } else {
+                $row['Class'] = $first->class;
+            }
 
             foreach (array_values($monthMap) as $abbr) {
                 $row[$abbr] = 0;
@@ -213,8 +236,8 @@ class PcoMaster extends Component
             return empty($search) ||
                 str_contains(strtolower($row['Plant'] ?? ''), $search) ||
                 str_contains(strtolower($row['Year'] ?? ''), $search) ||
-                str_contains(strtolower($row['Criteria'] ?? ''), $search) ||
-                str_contains(strtolower($row['Unit'] ?? ''), $search);
+                str_contains(strtolower($row['Criteria'] ?? $row['Class'] ?? ''), $search) ||
+                ($this->activeTab === 'pco' ? str_contains(strtolower($row['Unit'] ?? ''), $search) : true);
         });
 
         return $this->paginateCollection($filtered, $this->perPage);

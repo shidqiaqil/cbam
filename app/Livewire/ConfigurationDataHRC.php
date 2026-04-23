@@ -4,6 +4,8 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\MasterEnergyData;
+use App\Models\MasterPcoCoil;
+use App\Models\MasterPcoPlate;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Title;
@@ -321,6 +323,27 @@ class ConfigurationDataHRC extends Component
             ? (($platePower * $plateEf) + ($hrcPower * $hrcEf)) / $totalMwh
             : 0.0;
 
+        $months = $this->resolveMonths();
+
+        $coilQty = array_reduce(
+            $months,
+            fn(float $carry, string $month) => $carry + (float) MasterPcoCoil::where('period_year', $this->periodYear)
+                ->whereRaw('LOWER(TRIM(period_month)) = ?', [strtolower(trim($month))])
+                ->where('class', 'Coil Product')
+                ->sum('quantity'),
+            0.0
+        );
+
+        $plateQty = array_reduce(
+            $months,
+            fn(float $carry, string $month) => $carry + (float) MasterPcoPlate::where('period_year', $this->periodYear)
+                ->whereRaw('LOWER(TRIM(period_month)) = ?', [strtolower(trim($month))])
+                ->where('class', 'Plate Product')
+                ->sum('quantity'),
+            0.0
+        );
+
+        $plateHrcTon = $coilQty + $plateQty;
         return collect([
             [
                 'items'      => 'Electricity Total',
@@ -345,8 +368,8 @@ class ConfigurationDataHRC extends Component
             ],
             [
                 'items'      => 'Plate+HRC (Ton)',
-                'tooltip'    => '<ul><li>TBA</li></ul>',
-                'mwh'        => null,
+                'tooltip'    => '<ul><li>Quantity from pco_coils where class = Coil Product + Quantity from pco_plates where class = Plate Product</li><li>= ' . $coilQty . ' + ' . $plateQty . '</li></ul>',
+                'mwh'        => $plateHrcTon,
                 'ef'         => null,
                 'ef_tooltip' => '',
             ],
@@ -379,6 +402,97 @@ class ConfigurationDataHRC extends Component
     }
 
     // =========================================================================
+    // COMPUTED – TABLE 7: By Product Gas Emission
+    // =========================================================================
+
+
+    #[Computed]
+    public function hrcTable7Data(): Collection
+    {
+        if (empty($this->periodYear) || empty($this->period)) return collect();
+
+        // Steel Slab - Table 2 power[0] / 1000
+        $slab = new ConfigurationData();
+        $slab->periodYear = $this->periodYear;
+        $slab->period     = $this->period;
+
+        $slabMwh = ($slab->energyTableDataTable2->values()[0]['power'] ?? 0.0) / 1000;
+
+        // Steel Slab - Table 2.1 "Emission Factor (tCO2/MWh)" [4] = last row emission_factor
+        $slabEf = $slab->emissionTableData21->last()['emission_factor'] ?? 0.0;
+
+        $slabTco2 = $slabMwh * $slabEf;
+
+        // Table 5 values
+        $t5 = $this->hrcTable5Data;
+        $plateMwh  = $t5->values()[1]['mwh'] ?? 0.0;
+        $plateEf   = $t5->values()[1]['ef']  ?? 0.0;
+        $plateTco2 = $plateMwh * $plateEf;
+
+        $hrpMwh  = $t5->values()[2]['mwh'] ?? 0.0;
+        $hrpEf   = $t5->values()[2]['ef']  ?? 0.0;
+        $hrpTco2 = $hrpMwh * $hrpEf;
+
+        // Electricity Total
+        $totalMwh  = $slabMwh + $plateMwh + $hrpMwh;
+        $totalTco2 = $slabTco2 + $plateTco2 + $hrpTco2;
+        $totalEf   = $totalMwh > 0 ? ($totalTco2 / $totalMwh) : 0.0;
+
+        // Electricity Consumed = totalMwh / Table5 MWh[3] (Plate+HRC Ton)
+        $plateHrcTon     = $t5->values()[3]['mwh'] ?? 0.0;
+        $elecConsumed    = $plateHrcTon > 0 ? ($totalMwh / $plateHrcTon) : 0.0;
+
+        return collect([
+            [
+                'items'      => 'Slab',
+                'tooltip'    => '<ul><li>Steel Slab Tab → Table 2 Power[0] / 1000</li></ul>',
+                'mwh'        => $slabMwh,
+                'ef'         => $slabEf,
+                'ef_tooltip' => '<ul><li>Steel Slab Tab → Table 2.1 Emission Factor (tCO2/MWh) [4]</li></ul>',
+                'tco2'       => $slabTco2,
+                'tco2_tooltip' => '<ul><li>MWh[0] × EF[0]</li><li>= ' . $slabMwh . ' × ' . $slabEf . '</li></ul>',
+            ],
+            [
+                'items'      => 'Plate',
+                'tooltip'    => '<ul><li>Table 5 MWh[1]</li></ul>',
+                'mwh'        => $plateMwh,
+                'ef'         => $plateEf,
+                'ef_tooltip' => '<ul><li>Table 5 EF[1]</li></ul>',
+                'tco2'       => $plateTco2,
+                'tco2_tooltip' => '<ul><li>MWh[1] × EF[1]</li><li>= ' . $plateMwh . ' × ' . $plateEf . '</li></ul>',
+            ],
+            [
+                'items'      => 'HRP',
+                'tooltip'    => '<ul><li>Table 5 MWh[2]</li></ul>',
+                'mwh'        => $hrpMwh,
+                'ef'         => $hrpEf,
+                'ef_tooltip' => '<ul><li>Table 5 EF[2]</li></ul>',
+                'tco2'       => $hrpTco2,
+                'tco2_tooltip' => '<ul><li>MWh[2] × EF[2]</li><li>= ' . $hrpMwh . ' × ' . $hrpEf . '</li></ul>',
+            ],
+            [
+                'items'      => 'Electricity Total',
+                'tooltip'    => '<ul><li>MWh[0] + MWh[1] + MWh[2]</li><li>= ' . $slabMwh . ' + ' . $plateMwh . ' + ' . $hrpMwh . '</li></ul>',
+                'mwh'        => $totalMwh,
+                'ef'         => $totalEf,
+                'ef_tooltip' => '<ul><li>TCO2[3] / MWh[3]</li><li>= ' . $totalTco2 . ' / ' . $totalMwh . '</li></ul>',
+                'tco2'       => $totalTco2,
+                'tco2_tooltip' => '<ul><li>TCO2[0] + TCO2[1] + TCO2[2]</li><li>= ' . $slabTco2 . ' + ' . $plateTco2 . ' + ' . $hrpTco2 . '</li></ul>',
+                'is_total'   => true,
+            ],
+            [
+                'items'      => 'Electricity Consumed (MWh/Ton)',
+                'tooltip'    => '<ul><li>MWh[3] / Table 5 MWh[3] (Plate+HRC Ton)</li><li>= ' . $totalMwh . ' / ' . $plateHrcTon . '</li></ul>',
+                'mwh'        => $elecConsumed,
+                'ef'         => null,
+                'ef_tooltip' => '',
+                'tco2'       => null,
+                'tco2_tooltip' => '',
+            ],
+        ]);
+    }
+
+    // =========================================================================
     // RENDER
     // =========================================================================
 
@@ -395,6 +509,7 @@ class ConfigurationDataHRC extends Component
             'hrcTable4Data'   => $this->hrcTable4Data,
             'hrcTable5Data'   => $this->hrcTable5Data,
             'hrcTable6Data'   => $this->hrcTable6Data,
+            'hrcTable7Data'   => $this->hrcTable7Data,
         ]);
     }
 }

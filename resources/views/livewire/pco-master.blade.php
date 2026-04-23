@@ -5,6 +5,8 @@
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">PCO Master Data</h3>
+
+
                         <div class="ms-auto d-flex">
                             <div class="input-group input-group-flat me-2">
                                 <span class="input-group-text">
@@ -84,6 +86,20 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                     @endif
+                    <ul class="nav nav-tabs" data-bs-toggle="tabs">
+                        <li class="nav-item">
+                            <a class="nav-link {{ $activeTab === 'pco' ? 'active' : '' }}" wire:click="setTab('pco')"
+                                href="#" style="cursor: pointer;">PCO</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ $activeTab === 'pco_coil' ? 'active' : '' }}"
+                                wire:click="setTab('pco_coil')" href="#" style="cursor: pointer;">PCO Coil</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ $activeTab === 'pco_plate' ? 'active' : '' }}"
+                                wire:click="setTab('pco_plate')" href="#" style="cursor: pointer;">PCO Plate</a>
+                        </li>
+                    </ul>
                     <div class="card-table">
                         <div id="pco-table">
                             <div class="table-responsive">
@@ -93,8 +109,12 @@
                                             <th class="w-1">No.</th>
                                             <th>Plant</th>
                                             <th>Year</th>
+                                            @if($activeTab === 'pco')
                                             <th>Criteria</th>
                                             <th>Unit</th>
+                                            @else
+                                            <th>Class</th>
+                                            @endif
                                             @foreach(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
                                             'Oct', 'Nov', 'Dec'] as $month)
                                             <th>{{ $month }}</th>
@@ -117,8 +137,12 @@
                                             </td>
                                             <td class="fw-bold">{{ $row['Plant'] ?? '-' }}</td>
                                             <td>{{ $row['Year'] }}</td>
+                                            @if($activeTab === 'pco')
                                             <td>{{ $row['Criteria'] }}</td>
                                             <td>{{ $row['Unit'] }}</td>
+                                            @else
+                                            <td>{{ $row['Class'] }}</td>
+                                            @endif
                                             @foreach($months as $month)
                                             <td class="text-end">{{ number_format($row[$month] ?? 0, 2) }}</td>
                                             @endforeach
@@ -126,7 +150,8 @@
                                         </tr>
                                         @empty
                                         <tr>
-                                            <td colspan="18" class="text-center py-4">No PCO data matching filters.
+                                            <td colspan="{{ $activeTab === 'pco' ? 18 : 16 }}" class="text-center py-4">
+                                                No {{ ucfirst($activeTab) }} data matching filters.
                                                 Upload via Upload File.</td>
                                         </tr>
                                         @endforelse

@@ -444,6 +444,70 @@
                         @endif
                     </div>{{-- /table-6 --}}
 
+                    {{-- Table 7 --}}
+                    <div class="table-responsive mb-4">
+                        <h6 class="mb-3 text-primary">Table 7 – Electricity Summary</h6>
+                        @if($hrcTable7Data->isEmpty())
+                        <div class="alert alert-info">
+                            <i class="ti ti-info-circle"></i> Select year &amp; period to see Table 7 data.
+                        </div>
+                        @else
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Items</th>
+                                    <th class="text-end">MWh</th>
+                                    <th class="text-end">EF</th>
+                                    <th class="text-end">tCO2</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($hrcTable7Data as $row)
+                                <tr @class(['table-active fw-bold'=> !empty($row['is_total'])])>
+                                    <td>
+                                        {{ $row['items'] }}
+                                        @if(!empty($row['tooltip']))
+                                        <span class="badge badge-sm bg-light text-primary ms-1" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" data-bs-html="true"
+                                            data-bs-custom-class="tooltip-wide" title="{{ $row['tooltip'] }}">i</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-end">
+                                        {{ number_format((float)$row['mwh'], 2) }}
+                                    </td>
+                                    <td class="text-end">
+                                        @if($row['ef'] !== null)
+                                        {{ number_format((float)$row['ef'], 4) }}
+                                        @if(!empty($row['ef_tooltip']))
+                                        <span class="badge badge-sm bg-light text-primary ms-1" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" data-bs-html="true"
+                                            data-bs-custom-class="tooltip-wide"
+                                            title="{{ $row['ef_tooltip'] }}">i</span>
+                                        @endif
+                                        @else
+                                        <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-end">
+                                        @if($row['tco2'] !== null)
+                                        {{ number_format((float)$row['tco2'], 2) }}
+                                        @if(!empty($row['tco2_tooltip']))
+                                        <span class="badge badge-sm bg-light text-primary ms-1" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" data-bs-html="true"
+                                            data-bs-custom-class="tooltip-wide"
+                                            title="{{ $row['tco2_tooltip'] }}">i</span>
+                                        @endif
+                                        @else
+                                        <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                        @endif
+                    </div>{{-- /table-7 --}}
+
                 </div>{{-- /col full width --}}
 
             </div>

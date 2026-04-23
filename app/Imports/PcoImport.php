@@ -4,12 +4,17 @@ namespace App\Imports;
 
 use App\Models\MasterEnergyData;
 use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use App\Models\MasterPco;
+use App\Models\MasterPcoCoil;
+use App\Models\MasterPcoPlate;
+use App\Imports\PcoDataImport;
+use App\Imports\PcoCoilImport;
+use App\Imports\PcoPlateImport;
 
-class PcoImport implements ToCollection, WithHeadingRow, WithChunkReading
+class PcoImport implements WithMultipleSheets
 {
     private static array $monthMap = [
         'january'   => 'jan',
@@ -37,40 +42,12 @@ class PcoImport implements ToCollection, WithHeadingRow, WithChunkReading
         $this->period_year = $period_year;
     }
 
-    public function collection(Collection $rows): void
+    public function sheets(): array
     {
-        foreach ($rows as $row) {
-            if (empty($row['criteria'])) continue;
-
-            $monthCode = self::getMonthCode($this->period_month);
-            $quantity = round((float) ($row[$monthCode] ?? 0), 2);
-
-            MasterPco::updateOrCreate(
-                [
-                    'plant'        => $this->plant,
-                    'period_month' => $this->period_month,
-                    'period_year'  => $this->period_year,
-                    'criteria'     => $row['criteria'] ?? '',
-                    'unit'         => $row['unit'] ?? ''
-                ],
-                ['quantity' => $quantity]
-            );
-        }
-    }
-
-    public function chunkSize(): int
-    {
-        return 1000;
-    }
-
-    private static function getMonthCode(string $month): string
-    {
-        $month = strtolower($month);
-        if (!array_key_exists($month, self::$monthMap)) {
-            throw new \InvalidArgumentException(
-                "Invalid month: '{$month}'. Expected: " . implode(', ', array_keys(self::$monthMap))
-            );
-        }
-        return self::$monthMap[$month];
+        return [
+            0 => new PcoDataImport($this->plant, $this->period_month, $this->period_year),
+            1 => new PcoCoilImport($this->plant, $this->period_month, $this->period_year),
+            2 => new PcoPlateImport($this->plant, $this->period_month, $this->period_year),
+        ];
     }
 }

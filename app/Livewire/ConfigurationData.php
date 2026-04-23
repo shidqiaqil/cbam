@@ -1197,11 +1197,11 @@ class ConfigurationData extends Component
         // Table 4.1 steam [0] = emissionTableData41 row[0] steam
         $t41Steam0 = $this->emissionTableData41->values()[0]['steam'] ?? 0.0;
 
-        // Steel HRC Table 2.1 By Product Gas [0]
+        // Steel HRC Table 7 TCO2[3] = hrcTable7Data row[3] tco2
         $hrc = new ConfigurationDataHRC();
         $hrc->periodYear = $this->periodYear;
         $hrc->period     = $this->period;
-        $hrcBpg0 = $hrc->hrcTable21Data->first()['by_product_gas'] ?? 0.0;
+        $hrcTco23 = $hrc->hrcTable7Data->values()[3]['tco2'] ?? 0.0;
 
         return collect([
             [
@@ -1218,9 +1218,91 @@ class ConfigurationData extends Component
             ],
             [
                 'description' => 'Indirect total (masih salah formula)',
-                'tooltip'     => '<ul><li>Table 4.1 Steam [0] + Steel HRC Tab → Table 2.1 By Product Gas [0]</li><li>= ' . $t41Steam0 . ' + ' . $hrcBpg0 . '</li></ul>',
-                'quantity'    => $t41Steam0 + $hrcBpg0,
+                'tooltip'     => '<ul><li>Table 4.1 Steam [0] + Steel HRC Tab → Table 2.1 By Product Gas [0]</li><li>= ' . $t41Steam0 . ' + ' . $hrcTco23 . '</li></ul>',
+                'quantity'    => $t41Steam0 + $hrcTco23,
                 'unit'        => 'tCO2',
+            ],
+        ]);
+    }
+
+    #[Computed]
+    public function emissionTableData9(): Collection
+    {
+        if (empty($this->periodYear) || empty($this->period)) return collect();
+
+        // Table 6.1 COG [0]
+        $cog61 = $this->emissionTableData61->first()['cog'] ?? 0.0;
+
+        // Table 6.2 Emission Factor (tCO2/Tj) [0]
+        $ef62 = $this->emissionTableData62->first()['emission_factor'] ?? 0.0;
+
+        // Steel HRC instances
+        $hrc = new ConfigurationDataHRC();
+        $hrc->periodYear = $this->periodYear;
+        $hrc->period     = $this->period;
+
+        // HRC Table 4 Natural Gas [0]
+        $hrcNg4 = $hrc->hrcTable4Data->first()['natural_gas'] ?? 0.0;
+
+        // HRC Table 5 MWh [0]
+        $hrcMwh5 = $hrc->hrcTable5Data->values()[0]['mwh'] ?? 0.0;
+
+        // HRC Table 7 EF [3]
+        $hrcEf7 = $hrc->hrcTable7Data->values()[3]['ef'] ?? 0.0;
+
+        // Table 8 quantity [0]
+        $t8Qty0 = $this->emissionTableData8->values()[0]['quantity'] ?? 0.0;
+
+        // Row 0 — Waste gas Imported
+        $wasteGasImported = $cog61 + $hrcNg4;
+
+        // Row 1 — Emission Factors Imported
+        $efImported = $wasteGasImported > 0
+            ? (($cog61 * $ef62) + ($hrcNg4 * 44.4)) / $wasteGasImported
+            : 0.0;
+
+        // Row 2 — Electricity Imported
+        $elecImported = $t8Qty0 + $hrcMwh5;
+
+        // Row 3 — Emission Factors Electricity
+        $efElec = $hrcEf7;
+
+        return collect([
+            [
+                'description' => 'Waste gas',
+                'tooltip'     => '<ul><li>Table 6.1 COG [0] + Steel HRC Tab → Table 4 Natural Gas [0]</li><li>= ' . $cog61 . ' + ' . $hrcNg4 . '</li></ul>',
+                'imported'    => $wasteGasImported,
+                'im_tooltip'  => '',
+                'exported'    => null,
+                'ex_tooltip'  => '',
+                'unit'        => 'TJ',
+            ],
+            [
+                'description' => 'Emission Factors',
+                'tooltip'     => '<ul><li>((Table 6.1 COG [0] × Table 6.2 EF [0]) + (HRC Table 4 NG [0] × 44.4)) / Imported[0]</li><li>= ((' . $cog61 . ' × ' . $ef62 . ') + (' . $hrcNg4 . ' × 44.4)) / ' . $wasteGasImported . '</li></ul>',
+                'imported'    => $efImported,
+                'im_tooltip'  => '',
+                'exported'    => null,
+                'ex_tooltip'  => '',
+                'unit'        => 'tCO2/TJ',
+            ],
+            [
+                'description' => 'Electricity',
+                'tooltip'     => '<ul><li>Table 8 Quantity[0] + Steel HRC Tab → Table 5 MWh[0]</li><li>= ' . $t8Qty0 . ' + ' . $hrcMwh5 . '</li></ul>',
+                'imported'    => $elecImported,
+                'im_tooltip'  => '',
+                'exported'    => null,
+                'ex_tooltip'  => '',
+                'unit'        => 'MWh',
+            ],
+            [
+                'description' => 'Emission Factors',
+                'tooltip'     => '<ul><li>Steel HRC Tab → Table 7 EF[3]</li></ul>',
+                'imported'    => $efElec,
+                'im_tooltip'  => '',
+                'exported'    => null,
+                'ex_tooltip'  => '',
+                'unit'        => 'tCO2/MWh',
             ],
         ]);
     }
@@ -1250,6 +1332,7 @@ class ConfigurationData extends Component
             'emissionTableData52' => $this->emissionTableData52,
             'emissionTableData62' => $this->emissionTableData62,
             'emissionTableData8' => $this->emissionTableData8,
+            'emissionTableData9' => $this->emissionTableData9,
         ]);
     }
 }
