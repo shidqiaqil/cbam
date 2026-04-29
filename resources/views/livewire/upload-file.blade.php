@@ -39,6 +39,7 @@
                                                 <option value="pco">PCO</option>
                                                 <option value="sinter">Sinter</option>
                                                 <option value="steel making">Steel Making</option>
+                                                <option value="byproduct">Byproduct</option>
 
                                             </select>
                                             @error('plant') <div class="text-danger">{{ $message }}</div> @enderror

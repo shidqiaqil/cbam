@@ -12,6 +12,7 @@ use App\Imports\EnergyImport;
 use App\Imports\PcoImport;
 use App\Imports\SinterImport;
 use App\Imports\BfImport;
+use App\Imports\ByproductImport;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -35,6 +36,7 @@ class UploadFile extends Component
         'pco'           => PcoImport::class,
         'sinter'        => SinterImport::class,
         'blast furnace' => BfImport::class,
+        'byproduct'     => ByproductImport::class,
     ];
 
     public function submit()
@@ -58,7 +60,7 @@ class UploadFile extends Component
                     // 'user_id' => auth()->id(),
                 ]);
 
-                session()->flash('error', 'Upload supported only for Steel Making, Energy, PCO, Sinter, and BF plants currently.');
+                session()->flash('error', 'Upload supported only for Steel Making, Energy, PCO, Sinter, Blast Furnace, and Byproduct plants currently.');
                 return;
             }
 
