@@ -31,7 +31,8 @@
                             </li>
                             <li class="nav-item">
                                 <a href="#tabs-tab-2" class="nav-link {{ $activeTab === 'tab-2' ? 'active' : '' }}"
-                                    data-bs-toggle="tab" wire:click="$set('activeTab', 'tab-2')">Tab 2</a>
+                                    data-bs-toggle="tab" wire:click="$set('activeTab', 'tab-2')">C_Emissions &amp;
+                                    Energy</a>
                             </li>
                             <li class="nav-item">
                                 <a href="#tabs-tab-3" class="nav-link {{ $activeTab === 'tab-3' ? 'active' : '' }}"
@@ -44,15 +45,15 @@
                         </ul>
                     </div>{{-- /card-header --}}
 
-                    <div class="card-body p-0">
+                    <div class="card-body p-2">
+                        <br>
+                        <br>
                         <div class="tab-content">
 
                             {{-- ============================================================ --}}
                             {{-- TAB 1: B_EmInst --}}
                             {{-- ============================================================ --}}
                             <div class="tab-pane {{ $activeTab === 'tab-1' ? 'active show' : '' }}" id="tabs-tab-1">
-                                <br>
-                                <br>
 
                                 {{-- Filter row --}}
                                 <div class="d-flex align-items-center gap-2 px-3 py-2 border-bottom flex-wrap bg-white">
@@ -116,11 +117,10 @@
                                     </div>
                                 </div>
 
-                                <br>
 
                                 {{-- Action bar above table --}}
                                 <div
-                                    class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom bg-light">
+                                    class="d-flex align-items-center justify-content-between px-3 py-2 ps-3 border-bottom bg-light">
                                     <div class="d-flex align-items-center gap-2">
                                         <span class="text-muted small">
                                             <i class="ti ti-table me-1"></i>
@@ -158,7 +158,7 @@
                                 </div>
 
                                 {{-- Table --}}
-                                <div class="table-responsive">
+                                <div class="table-responsive ps-3">
                                     <table class="table table-bordered table-hover align-middle mb-0 small">
                                         <thead>
                                             <tr class="bg-primary text-white">
@@ -411,11 +411,11 @@
                             {{-- TAB 2 --}}
                             {{-- ============================================================ --}}
                             <div class="tab-pane {{ $activeTab === 'tab-2' ? 'active show' : '' }}" id="tabs-tab-2">
-                                <div class="p-4">
-                                    <div class="alert alert-info">
-                                        <i class="ti ti-info-circle"></i> Content for Tab 2 will be added here.
-                                    </div>
-                                </div>
+                                @livewire('data-calculation-c-emission', [
+                                'periodType' => $periodType,
+                                'periodYear' => $periodYear,
+                                'period' => $period,
+                                ], key('c-emission-' . $periodType . '-' . $periodYear . '-' . $period))
                             </div>
 
                             {{-- ============================================================ --}}

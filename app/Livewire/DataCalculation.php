@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Computed;
 use App\Models\BEmInstData;
 use App\Models\MasterSinter;
 use App\Models\MasterBf;
@@ -737,6 +738,16 @@ class DataCalculation extends Component
     }
 
     // =========================================================================
+
+    #[Computed]
+    public function cEmissionComponent()
+    {
+        return view('livewire.data-calculation-c-emission', [
+            'periodType' => $this->periodType,
+            'periodYear' => $this->periodYear,
+            'period'     => $this->period,
+        ]);
+    }
 
     public function render()
     {

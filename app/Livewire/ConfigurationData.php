@@ -1217,7 +1217,7 @@ class ConfigurationData extends Component
                 'unit'        => 'tCO2',
             ],
             [
-                'description' => 'Indirect total (masih salah formula)',
+                'description' => 'Indirect total',
                 'tooltip'     => '<ul><li>Table 4.1 Steam [0] + Steel HRC Tab → Table 2.1 By Product Gas [0]</li><li>= ' . $t41Steam0 . ' + ' . $hrcTco23 . '</li></ul>',
                 'quantity'    => $t41Steam0 + $hrcTco23,
                 'unit'        => 'tCO2',

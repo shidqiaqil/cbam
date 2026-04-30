@@ -17,3 +17,4 @@ Route::get('/bfmaster', \App\Livewire\BfMaster::class)->name('bfmaster');
 Route::get('/byproductmaster', \App\Livewire\ByproductMaster::class)->name('byproductmaster');
 Route::get('/configurationdata-chp', \App\Livewire\ConfigurationDataCHP::class)->name('configurationdata-chp');
 Route::get('/datacalculation', \App\Livewire\DataCalculation::class)->name('datacalculation');
+Route::get('/datacalculation/c-emission', \App\Livewire\DataCalculationCEmission::class)->name('datacalculation.c-emission');
