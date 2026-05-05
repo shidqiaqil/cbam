@@ -18,9 +18,12 @@
                     <div class="row row-cards">
 
                         <div class="col-12">
+
+
+                            <!-- Upload Form -->
                             <form class="card">
                                 <div class="card-header">
-                                    <h3 class="card-title">Master Data</h3>
+                                    <h3 class="card-title">Upload File</h3>
                                 </div>
                                 <div class="card-body">
                                     @if (session()->has('message'))
@@ -93,6 +96,8 @@
                                         </div>
                                     </div>
 
+
+
                                     {{-- Progress bar --}}
                                     <div wire:loading wire:target="submit" class="mb-3">
                                         <div class="progress mb-1" style="height: 8px;">
@@ -105,6 +110,109 @@
                                             Sedang memproses file, mohon tunggu...
                                         </small>
                                     </div>
+                                    <a href="#" wire:click.prevent="openTemplateModal">
+                                        <i class="ti ti-download me-2"></i>
+                                        Download Template Files
+                                    </a>
+
+                                    @if($showTemplateModal)
+                                    <div class="modal fade show d-block" tabindex="-1" wire:ignore.self>
+                                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                                            <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+
+                                                {{-- Header --}}
+                                                <div class="modal-header border-bottom px-4 py-3">
+                                                    <div class="d-flex align-items-center gap-3">
+                                                        <div class="rounded-3 p-2 bg-primary bg-opacity-10 d-flex">
+                                                            <i class="ti ti-files fs-5 text-primary"></i>
+                                                        </div>
+                                                        <div>
+                                                            <h6 class="mb-0 fw-semibold">Template Plant</h6>
+                                                            <small class="text-muted">Pilih template sesuai
+                                                                kebutuhan</small>
+                                                        </div>
+                                                    </div>
+                                                    <button type="button" class="btn-close"
+                                                        wire:click="closeTemplateModal"></button>
+                                                </div>
+
+                                                {{-- Body --}}
+                                                <div class="modal-body px-4 py-3">
+                                                    @if (session()->has('error'))
+                                                    <div class="alert alert-danger">{{ session('error') }}</div>
+                                                    @endif
+
+                                                    <div class="row g-3">
+                                                        @foreach ([
+                                                        ['key' => 'blast furnace', 'label' => 'Blast Furnace', 'file' =>
+                                                        'blast_furnace.xlsx', 'icon' => 'ti-fire', 'color' =>
+                                                        'primary'],
+                                                        ['key' => 'energy', 'label' => 'Energy', 'file' =>
+                                                        'energy.xlsx', 'icon' => 'ti-bolt', 'color' => 'success'],
+                                                        ['key' => 'pco', 'label' => 'PCO', 'file' => 'pco.xlsx', 'icon'
+                                                        => 'ti-settings', 'color' => 'danger'],
+                                                        ['key' => 'sinter', 'label' => 'Sinter', 'file' =>
+                                                        'sinter.xlsx', 'icon' => 'ti-layers', 'color' => 'warning'],
+                                                        ['key' => 'steel making', 'label' => 'Steel Making', 'file' =>
+                                                        'steel_making.xlsx', 'icon' => 'ti-hammer', 'color' => 'info'],
+                                                        ['key' => 'byproduct', 'label' => 'Byproduct', 'file' =>
+                                                        'byproduct.xlsx', 'icon' => 'ti-recycle', 'color' =>
+                                                        'secondary'],
+                                                        ] as $tpl)
+                                                        <div class="col-md-4">
+                                                            <a href="#"
+                                                                wire:click.prevent="downloadTemplate('{{ $tpl['key'] }}')"
+                                                                class="text-decoration-none d-block h-100 template-card">
+                                                                <div
+                                                                    class="card border h-100 text-center p-3 rounded-3 template-card-inner">
+                                                                    <div class="rounded-3 p-2 mb-2 mx-auto d-flex align-items-center justify-content-center
+                                            bg-{{ $tpl['color'] }} bg-opacity-10" style="width:48px;height:48px;">
+                                                                        <i
+                                                                            class="ti {{ $tpl['icon'] }} fs-4 text-{{ $tpl['color'] }}"></i>
+                                                                    </div>
+                                                                    <h6 class="mb-1 fw-semibold small">{{ $tpl['label']
+                                                                        }}</h6>
+                                                                    <small class="text-muted" style="font-size:11px;">{{
+                                                                        $tpl['file'] }}</small>
+                                                                    <div class="mt-2 d-flex align-items-center justify-content-center gap-1 text-primary"
+                                                                        style="font-size:12px;">
+                                                                        <i class="ti ti-download"
+                                                                            style="font-size:13px;"></i>
+                                                                        Unduh
+                                                                    </div>
+                                                                </div>
+                                                            </a>
+                                                        </div>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+
+                                                {{-- Footer --}}
+                                                <div
+                                                    class="modal-footer border-top px-4 py-2 d-flex justify-content-between align-items-center">
+                                                    <small class="text-muted">6 template tersedia</small>
+                                                    <button type="button"
+                                                        class="btn btn-sm btn-outline-secondary rounded-3"
+                                                        wire:click="closeTemplateModal">Tutup</button>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-backdrop fade show" wire:click="closeTemplateModal"></div>
+
+                                    {{-- Hover style --}}
+                                    <style>
+                                        .template-card-inner {
+                                            transition: border-color .15s, background-color .15s;
+                                        }
+
+                                        .template-card:hover .template-card-inner {
+                                            border-color: var(--bs-primary) !important;
+                                            background-color: rgba(var(--bs-primary-rgb), .04);
+                                        }
+                                    </style>
+                                    @endif
 
                                     <div class="text-end">
                                         <button type="button" wire:click="submit" class="btn btn-primary"

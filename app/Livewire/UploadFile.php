@@ -16,6 +16,7 @@ use App\Imports\ByproductImport;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Log;
 use Throwable;
+use Illuminate\Support\Facades\Response;
 
 #[Layout('layouts.app')]
 #[Title('Upload File')]
@@ -29,6 +30,8 @@ class UploadFile extends Component
     public $file;
     public $isUploading = false;
     public $progress = 0;
+    public $selectedPlantDownload = '';
+    public $showTemplateModal = false;
 
     private array $importMap = [
         'steel making'  => SteelMakingImport::class,
@@ -121,6 +124,41 @@ class UploadFile extends Component
         $this->month = '';
         $this->year  = '';
         $this->file  = null;
+        $this->selectedPlantDownload = '';
+        $this->showTemplateModal = false;
+    }
+
+    public function openTemplateModal()
+    {
+        $this->showTemplateModal = true;
+    }
+
+    public function closeTemplateModal()
+    {
+        $this->showTemplateModal = false;
+    }
+
+    public function downloadTemplate($plant = null)
+    {
+        if ($plant) {
+            $this->selectedPlantDownload = $plant;
+        }
+
+        $this->validate([
+            'selectedPlantDownload' => 'required',
+        ]);
+
+        $filename = str_replace(' ', '_', strtolower($this->selectedPlantDownload)) . '.xlsx';
+        $filepath = public_path('templates/' . $filename);
+
+        if (!file_exists($filepath)) {
+            session()->flash('error', 'Template file not found: ' . $filename . '. Please place it in public/templates/');
+            return;
+        }
+
+        $this->closeTemplateModal();
+
+        return Response::download($filepath)->deleteFileAfterSend(true);
     }
 
     public function render()
