@@ -1,9 +1,7 @@
 <div class="page-body">
     <div class="container-xl">
 
-        {{-- ================================================================ --}}
         {{-- FLASH MESSAGE --}}
-        {{-- ================================================================ --}}
         @if (session()->has('success'))
         <div class="alert alert-success alert-dismissible mb-3" role="alert">
             <div class="d-flex align-items-center">
@@ -18,12 +16,8 @@
             <div class="col-md-12">
                 <div class="card">
 
-                    {{-- ============================================================ --}}
-                    {{-- CARD HEADER: Tabs only --}}
-                    {{-- ============================================================ --}}
+                    {{-- CARD HEADER: Tabs --}}
                     <div class="card-header d-block pb-0">
-
-                        {{-- Tab Navigation --}}
                         <ul class="nav nav-tabs card-header-tabs nav-fill" data-bs-toggle="tabs">
                             <li class="nav-item">
                                 <a href="#tabs-tab-1" class="nav-link {{ $activeTab === 'tab-1' ? 'active' : '' }}"
@@ -45,19 +39,18 @@
                         </ul>
                     </div>{{-- /card-header --}}
 
-                    <div class="card-body p-2">
-                        <br>
-                        <br>
+                    <div class="card-body p-0">
                         <div class="tab-content">
+                            <br>
+                            <br>
 
-                            {{-- ============================================================ --}}
+                            {{-- ======================================================== --}}
                             {{-- TAB 1: B_EmInst --}}
-                            {{-- ============================================================ --}}
+                            {{-- ======================================================== --}}
                             <div class="tab-pane {{ $activeTab === 'tab-1' ? 'active show' : '' }}" id="tabs-tab-1">
 
                                 {{-- Filter row --}}
                                 <div class="d-flex align-items-center gap-2 px-3 py-2 border-bottom flex-wrap bg-white">
-                                    {{-- Period Type --}}
                                     <div class="d-flex align-items-center gap-1">
                                         <label
                                             class="form-label mb-0 text-muted small fw-semibold text-nowrap">Period:</label>
@@ -68,8 +61,6 @@
                                             <option value="yearly">Yearly</option>
                                         </select>
                                     </div>
-
-                                    {{-- Year --}}
                                     <div class="d-flex align-items-center gap-1">
                                         <label class="form-label mb-0 text-muted small fw-semibold">Year:</label>
                                         <select wire:model.live="periodYear" class="form-select form-select-sm"
@@ -79,8 +70,6 @@
                                             @endforeach
                                         </select>
                                     </div>
-
-                                    {{-- Period value (month / quarter / hidden for yearly) --}}
                                     @if($periodType === 'monthly')
                                     <div class="d-flex align-items-center gap-1">
                                         <label class="form-label mb-0 text-muted small fw-semibold">Month:</label>
@@ -102,7 +91,6 @@
                                         </select>
                                     </div>
                                     @endif
-
                                     <div class="ms-auto">
                                         <span class="badge bg-blue-lt text-blue fw-semibold px-3 py-2">
                                             <i class="ti ti-calendar me-1"></i>
@@ -117,10 +105,9 @@
                                     </div>
                                 </div>
 
-
-                                {{-- Action bar above table --}}
+                                {{-- Action bar --}}
                                 <div
-                                    class="d-flex align-items-center justify-content-between px-3 py-2 ps-3 border-bottom bg-light">
+                                    class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom bg-light">
                                     <div class="d-flex align-items-center gap-2">
                                         <span class="text-muted small">
                                             <i class="ti ti-table me-1"></i>
@@ -132,7 +119,6 @@
                                         </span>
                                         @endif
                                     </div>
-
                                     <div class="d-flex align-items-center gap-2">
                                         @if(!$isEditing)
                                         <button wire:click="enterEditMode"
@@ -173,20 +159,26 @@
                                                 <th class="text-center" style="width:90px;">AD Unit</th>
                                                 <th class="text-end" style="min-width:110px;">
                                                     Net Calorific Value (NCV)
-                                                    @if($isEditing)<span class="badge bg-white text-primary ms-1"
-                                                        style="font-size:9px;">input</span>@endif
+                                                    @if($isEditing)
+                                                    <span class="badge bg-white text-primary ms-1"
+                                                        style="font-size:9px;">input</span>
+                                                    @endif
                                                 </th>
                                                 <th class="text-center" style="width:120px;">NCV Unit</th>
                                                 <th class="text-end" style="min-width:110px;">
                                                     Emission Factor (EF)
-                                                    @if($isEditing)<span class="badge bg-white text-primary ms-1"
-                                                        style="font-size:9px;">input</span>@endif
+                                                    @if($isEditing)
+                                                    <span class="badge bg-white text-primary ms-1"
+                                                        style="font-size:9px;">input</span>
+                                                    @endif
                                                 </th>
                                                 <th class="text-center" style="width:120px;">EF Unit</th>
                                                 <th class="text-end" style="min-width:110px;">
                                                     Carbon Content
-                                                    @if($isEditing)<span class="badge bg-white text-primary ms-1"
-                                                        style="font-size:9px;">input</span>@endif
+                                                    @if($isEditing)
+                                                    <span class="badge bg-white text-primary ms-1"
+                                                        style="font-size:9px;">input</span>
+                                                    @endif
                                                 </th>
                                                 <th class="text-center" style="width:120px;">C-Content Unit</th>
                                                 <th class="text-end" style="min-width:120px;">CO2e Fossil (t)</th>
@@ -198,12 +190,6 @@
                                             $co2eData = $this->computeCo2e($row);
                                             $co2e = $co2eData['value'];
                                             $co2eTooltip = $co2eData['tooltip'];
-                                            $methodColor = match(strtolower($row['method'])) {
-                                            'combustion' => 'text-orange',
-                                            'mass balance' => 'text-blue',
-                                            'process emissions', 'process emission' => 'text-green',
-                                            default => '',
-                                            };
                                             $methodBadge = match(strtolower($row['method'])) {
                                             'combustion' => 'bg-orange-lt text-orange',
                                             'mass balance' => 'bg-blue-lt text-blue',
@@ -212,11 +198,12 @@
                                             };
                                             @endphp
                                             <tr class="{{ $index % 2 === 0 ? '' : 'bg-light' }}">
+
                                                 {{-- No --}}
                                                 <td class="text-center fw-semibold text-muted px-2">{{ $row['row_order']
                                                     }}</td>
 
-                                                {{-- Method (static) --}}
+                                                {{-- Method --}}
                                                 <td>
                                                     <span class="badge {{ $methodBadge }} fw-normal"
                                                         style="font-size:11px;">
@@ -224,10 +211,10 @@
                                                     </span>
                                                 </td>
 
-                                                {{-- Source stream name (static) --}}
+                                                {{-- Source Stream Name --}}
                                                 <td class="fw-medium">{{ $row['source_stream_name'] }}</td>
 
-                                                {{-- AD Value (formula / computed — read-only) --}}
+                                                {{-- AD Value --}}
                                                 <td class="text-end font-monospace text-muted">
                                                     @if($row['ad_value'] !== null)
                                                     {{ number_format($row['ad_value'], 2) }}
@@ -242,7 +229,7 @@
                                                     @endif
                                                 </td>
 
-                                                {{-- AD Unit (static) --}}
+                                                {{-- AD Unit --}}
                                                 <td class="text-center">
                                                     <span class="badge bg-secondary-lt text-secondary">{{
                                                         $row['ad_unit'] }}</span>
@@ -356,7 +343,7 @@
                                                     @endif
                                                 </td>
 
-                                                {{-- CO2e Fossil (computed) --}}
+                                                {{-- CO2e Fossil --}}
                                                 <td class="font-monospace">
                                                     @if($co2e !== null)
                                                     <div
@@ -369,15 +356,15 @@
                                                             title="{{ $co2eTooltip }}">i</span>
                                                     </div>
                                                     @else
-                                                    <div class="text-end"><span class="text-muted opacity-50">—</span>
+                                                    <div class="text-end">
+                                                        <span class="text-muted opacity-50">—</span>
                                                     </div>
                                                     @endif
                                                 </td>
+
                                             </tr>
                                             @endforeach
                                         </tbody>
-
-                                        {{-- Total row --}}
                                         <tfoot>
                                             @php
                                             $totalCo2e = collect($rows)->sum(fn($r) => $this->computeCo2e($r)['value']
@@ -399,46 +386,42 @@
                                     <span class="badge bg-orange-lt text-orange fw-normal">Combustion</span>
                                     <span class="badge bg-blue-lt text-blue fw-normal">Mass Balance</span>
                                     <span class="badge bg-green-lt text-teal fw-normal">Process Emissions</span>
-                                    {{-- <span class="ms-auto text-muted" style="font-size:11px;">
-                                        <i class="ti ti-info-circle me-1"></i>
-                                        AD is sourced from input data. CO2e = AD × NCV × EF (or AD × C-Content × 44/12)
-                                    </span> --}}
                                 </div>
 
                             </div>{{-- /tab-pane tab-1 --}}
 
-                            {{-- ============================================================ --}}
-                            {{-- TAB 2 --}}
-                            {{-- ============================================================ --}}
+                            {{-- ======================================================== --}}
+                            {{-- TAB 2: C_Emissions & Energy --}}
+                            {{-- ======================================================== --}}
                             <div class="tab-pane {{ $activeTab === 'tab-2' ? 'active show' : '' }}" id="tabs-tab-2">
                                 @livewire('data-calculation-c-emission', [
                                 'periodType' => $periodType,
                                 'periodYear' => $periodYear,
                                 'period' => $period,
                                 ], key('c-emission-' . $periodType . '-' . $periodYear . '-' . $period))
-                            </div>
+                            </div>{{-- /tab-pane tab-2 --}}
 
-                            {{-- ============================================================ --}}
+                            {{-- ======================================================== --}}
                             {{-- TAB 3 --}}
-                            {{-- ============================================================ --}}
+                            {{-- ======================================================== --}}
                             <div class="tab-pane {{ $activeTab === 'tab-3' ? 'active show' : '' }}" id="tabs-tab-3">
                                 <div class="p-4">
                                     <div class="alert alert-info">
                                         <i class="ti ti-info-circle"></i> Content for Tab 3 will be added here.
                                     </div>
                                 </div>
-                            </div>
+                            </div>{{-- /tab-pane tab-3 --}}
 
-                            {{-- ============================================================ --}}
+                            {{-- ======================================================== --}}
                             {{-- TAB 4 --}}
-                            {{-- ============================================================ --}}
+                            {{-- ======================================================== --}}
                             <div class="tab-pane {{ $activeTab === 'tab-4' ? 'active show' : '' }}" id="tabs-tab-4">
                                 <div class="p-4">
                                     <div class="alert alert-info">
                                         <i class="ti ti-info-circle"></i> Content for Tab 4 will be added here.
                                     </div>
                                 </div>
-                            </div>
+                            </div>{{-- /tab-pane tab-4 --}}
 
                         </div>{{-- /tab-content --}}
                     </div>{{-- /card-body --}}

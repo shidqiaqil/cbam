@@ -195,12 +195,96 @@ class DataCalculationCEmission extends Component
         return \App\Models\MasterEnergyData::distinct()->orderByDesc('period_year')->pluck('period_year')->values()->toArray();
     }
 
+    // =========================================================================
+    // Tooltip builders
+    // =========================================================================
+
+    private function fmt(?float $v, int $dec = 3): string
+    {
+        return $v !== null ? number_format($v, $dec) : '—';
+    }
+
+    private function nl(string ...$lines): string
+    {
+        return implode('&#10;', $lines);
+    }
+
+    public function getTooltipRow1Label(): string
+    {
+        return $this->nl(
+            'from B_EmInst',
+            '  SUM of CO2e Fossil (t) — all 14 rows',
+            '',
+            '• if EF filled → AD × EF',
+            '• else         → AD × Carbon Content',
+            '',
+            'Value: ' . $this->fmt($this->directEmissions) . ' tCO2e'
+        );
+    }
+
+    public function getTooltipRow2Label(): string
+    {
+        return $this->nl(
+            'from ConfigurationData',
+            '  Table 8, index [2]: Indirect total',
+            '',
+            '• Table 4.1 Steam[0]',
+            '• Steel HRC Table 7 tCO2[3]',
+            '',
+            'Value: ' . $this->fmt($this->indirectEmissions) . ' tCO2e'
+        );
+    }
+
+    public function getTooltipResultDirect(): string
+    {
+        return $this->nl(
+            'from B_EmInst',
+            '  Total CO2e Fossil (t)',
+            '',
+            '• SUM of all 14 rows CO2e',
+            '',
+            'Value: ' . $this->fmt($this->directEmissions) . ' tCO2e'
+        );
+    }
+
+    public function getTooltipResultIndirect(): string
+    {
+        return $this->nl(
+            'from ConfigurationData',
+            '  Table 8 [2]: Indirect total',
+            '',
+            '• Table 4.1 Steam[0]',
+            '• Steel HRC Table 7 tCO2[3]',
+            '',
+            'Value: ' . $this->fmt($this->indirectEmissions) . ' tCO2e'
+        );
+    }
+
+    public function getTooltipResultTotal(): string
+    {
+        return $this->nl(
+            'Total direct + Total indirect',
+            '',
+            '• Direct:   ' . $this->fmt($this->directEmissions)  . ' tCO2e',
+            '• Indirect: ' . $this->fmt($this->indirectEmissions) . ' tCO2e',
+            str_repeat('─', 28),
+            'Total: ' . $this->fmt($this->totalEmissions) . ' tCO2e'
+        );
+    }
+
+    // =========================================================================
+
     public function render()
     {
         return view('livewire.data-calculation-c-emission', [
-            'monthOptions'   => $this->getMonthOptions(),
-            'quarterOptions' => $this->getQuarterOptions(),
-            'yearOptions'    => $this->getYearOptions(),
+            'monthOptions'          => $this->getMonthOptions(),
+            'quarterOptions'        => $this->getQuarterOptions(),
+            'yearOptions'           => $this->getYearOptions(),
+            'tooltipRow1Label'      => $this->getTooltipRow1Label(),
+            'tooltipRow2Label'      => $this->getTooltipRow2Label(),
+            'tooltipResultDirect'   => $this->getTooltipResultDirect(),
+            'tooltipResultIndirect' => $this->getTooltipResultIndirect(),
+            'tooltipResultTotal'    => $this->getTooltipResultTotal(),
         ]);
     }
 }
