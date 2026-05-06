@@ -405,12 +405,13 @@
                             {{-- TAB 3 --}}
                             {{-- ======================================================== --}}
                             <div class="tab-pane {{ $activeTab === 'tab-3' ? 'active show' : '' }}" id="tabs-tab-3">
-                                <div class="p-4">
-                                    <div class="alert alert-info">
-                                        <i class="ti ti-info-circle"></i> Content for Tab 3 will be added here.
-                                    </div>
-                                </div>
+                                @livewire('data-calculation-d-processes', [
+                                'periodType' => $periodType,
+                                'periodYear' => $periodYear,
+                                'period' => $period,
+                                ], key('d-processes-' . $periodType . '-' . $periodYear . '-' . $period))
                             </div>{{-- /tab-pane tab-3 --}}
+
 
                             {{-- ======================================================== --}}
                             {{-- TAB 4 --}}
