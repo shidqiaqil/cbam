@@ -30,7 +30,7 @@
                             </li>
                             <li class="nav-item">
                                 <a href="#tabs-tab-3" class="nav-link {{ $activeTab === 'tab-3' ? 'active' : '' }}"
-                                    data-bs-toggle="tab" wire:click="$set('activeTab', 'tab-3')">Tab 3</a>
+                                    data-bs-toggle="tab" wire:click="$set('activeTab', 'tab-3')">D_Processes</a>
                             </li>
                             <li class="nav-item">
                                 <a href="#tabs-tab-4" class="nav-link {{ $activeTab === 'tab-4' ? 'active' : '' }}"

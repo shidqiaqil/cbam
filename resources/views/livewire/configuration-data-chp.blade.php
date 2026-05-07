@@ -156,7 +156,7 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th>Description</th>
-                                        <th>Source</th>
+                                        <th>Quantity</th>
                                         <th>Unit</th>
                                     </tr>
                                 </thead>
