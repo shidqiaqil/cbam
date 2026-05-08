@@ -1308,6 +1308,176 @@ class ConfigurationData extends Component
     }
 
     // -------------------------------------------------------------------------
+    // Computed – TABLE 10
+    // -------------------------------------------------------------------------
+
+    #[Computed]
+    public function emissionTableData10(): Collection
+    {
+        if (empty($this->periodYear) || empty($this->period)) return collect();
+
+        $t2 = $this->energyTableDataTable2;
+        if ($t2->isEmpty()) return collect();
+
+        // Amounts from Table 2 (kWh)
+        $kpeAmt  = $t2->firstWhere('description', 'Purchase (KPE Power)')['power']            ?? 0.0;
+        $plnAmt  = $t2->firstWhere('description', 'Purchase Electricity from PLN')['power']   ?? 0.0;
+        $bfAmt   = $t2->firstWhere('description', 'BF Generation')['power']                   ?? 0.0;
+
+        // EF[0] KPE = CHP Table 9 quantity[0]
+        $chp = new ConfigurationDataCHP();
+        $chp->periodYear = $this->periodYear;
+        $chp->period     = $this->period;
+        $efKpe = $chp->table9Data->values()[0]['quantity'] ?? 0.0;
+
+        // EF[1] PLN = fixed 0.87
+        $efPln = 0.87;
+
+        // EF[2] BF = 0
+        $efBf = 0.0;
+
+        // Total Emissions (kWh → MWh: /1000)
+        $em0 = $kpeAmt * $efKpe / 1000;
+        $em1 = $plnAmt * $efPln / 1000;
+        $em2 = $bfAmt  * $efBf  / 1000;
+
+        // Total row
+        $sumAmt   = $kpeAmt + $plnAmt + $bfAmt;
+        $sumEm    = $em0 + $em1 + $em2;
+        $totalEf  = $sumAmt > 0 ? ($sumEm / ($sumAmt / 1000)) : 0.0;
+
+        return collect([
+            [
+                'description'    => 'Purchase Electricity from (KPE Power)',
+                'amount'         => $kpeAmt,
+                'amt_tooltip'    => '<ul><li>Table 2 where Description = Purchase (KPE Power)</li></ul>',
+                'emission_factor' => $efKpe,
+                'ef_tooltip'     => '<ul><li>CHP Tab → Table 9 Quantity[0]</li></ul>',
+                'total_emission' => $em0,
+                'em_tooltip'     => '<ul><li>Amount[0] × Emission Factor[0] / 1000</li><li>= ' . $kpeAmt . ' × ' . $efKpe . ' / 1000</li></ul>',
+                'unit'           => 'tCO2',
+            ],
+            [
+                'description'    => 'Purchase Electricity from PLN (National Grid)',
+                'amount'         => $plnAmt,
+                'amt_tooltip'    => '<ul><li>Table 2 where Description = Purchase Electricity from PLN</li></ul>',
+                'emission_factor' => $efPln,
+                'ef_tooltip'     => '<ul><li>Fixed Emission Factor: 0.8700 tCO2/MWh</li></ul>',
+                'total_emission' => $em1,
+                'em_tooltip'     => '<ul><li>Amount[1] × Emission Factor[1] / 1000</li><li>= ' . $plnAmt . ' × ' . $efPln . ' / 1000</li></ul>',
+                'unit'           => 'tCO2',
+            ],
+            [
+                'description'    => 'TRT - BF Generation (Clean Energy)',
+                'amount'         => $bfAmt,
+                'amt_tooltip'    => '<ul><li>Table 2 where Description = BF Generation</li></ul>',
+                'emission_factor' => $efBf,
+                'ef_tooltip'     => '<ul><li>Fixed value: 0 (Clean Energy)</li></ul>',
+                'total_emission' => $em2,
+                'em_tooltip'     => '<ul><li>Amount[2] × Emission Factor[2] / 1000 = 0</li></ul>',
+                'unit'           => 'tCO2',
+            ],
+            [
+                'description'    => 'Total',
+                'amount'         => $sumAmt,
+                'amt_tooltip'    => '<ul><li>Sum Amount[0]:[2]</li></ul>',
+                'emission_factor' => $totalEf,
+                'ef_tooltip'     => '<ul><li>Sum Total Emission[0]:[2] / (Sum Amount[0]:[2] / 1000)</li><li>= ' . $sumEm . ' / ' . ($sumAmt / 1000) . '</li></ul>',
+                'total_emission' => $sumEm,
+                'em_tooltip'     => '<ul><li>Sum Total Emission[0]:[2]</li></ul>',
+                'unit'           => 'tCO2',
+                'is_total'       => true,
+            ],
+        ]);
+    }
+
+    // -------------------------------------------------------------------------
+    // Computed – TABLE 11
+    // -------------------------------------------------------------------------
+
+    #[Computed]
+    public function emissionTableData11b(): Collection
+    {
+        if (empty($this->periodYear) || empty($this->period)) return collect();
+
+        $t2 = $this->energyTableDataTable2;
+        if ($t2->isEmpty()) return collect();
+
+        // MWh[0] Electricity = Table 2 Operational usage for Slab Production (kWh)
+        $slabKwh = $t2->firstWhere('description', 'Operational usage for Slab Production')['power'] ?? 0.0;
+        $slabMwh = $slabKwh / 1000;
+        // MWh[1] Plate = Table 1 Steel Plate Power Plate Mill (MWh already)
+        $steelPlate = new ConfigurationDataSteelPlate();
+        $steelPlate->periodYear = $this->periodYear;
+        $steelPlate->period     = $this->period;
+        $plateMwh = $steelPlate->steelPlateTable1->first()['power'] ?? 0.0;
+
+        // MWh[2] HRC = Table 1 Steel HRC Power HRP Plant (MWh already)
+        $hrc = new ConfigurationDataHRC();
+        $hrc->periodYear = $this->periodYear;
+        $hrc->period     = $this->period;
+        $hrcMwh = $hrc->hrcTable1Data->first()['power'] ?? 0.0;
+
+        // EF from Table 10 Emission Factor[3] (Total row)
+        $t10Ef  = $this->emissionTableData10->last()['emission_factor'] ?? 0.0;
+        $efPln  = 0.87; // fixed for HRC
+
+        // TCO2 calculations ()
+        $tco2Slab  = $slabMwh * $t10Ef;
+        $tco2Plate = $plateMwh * $t10Ef;
+        $tco2Hrc   = $hrcMwh   * $efPln;
+
+        // Total
+        $sumMwh  = ($slabKwh / 1000) + $plateMwh + $hrcMwh;
+        $sumTco2 = $tco2Slab + $tco2Plate + $tco2Hrc;
+        $totalEf = $sumMwh > 0 ? ($sumTco2 / $sumMwh) : 0.0;
+
+        return collect([
+            [
+                'description' => 'Electricity',
+                'mwh'         => $slabMwh,
+                'mwh_tooltip' => '<ul><li>Table 2 where Description = Operational usage for Slab Production (kWh)</li></ul>',
+                'ef'          => $t10Ef,
+                'ef_tooltip'  => '<ul><li>Table 10 Emission Factor[3] (Total row blended EF)</li></ul>',
+                'tco2'        => $tco2Slab,
+                'tco2_tooltip' => '<ul><li>MWh[0] × EF[0] / 1000</li><li>= ' . $slabKwh . ' × ' . $t10Ef . ' / 1000</li></ul>',
+                'unit'        => 'kWh',
+            ],
+            [
+                'description' => 'Electricity for Plate',
+                'mwh'         => $plateMwh,
+                'mwh_tooltip' => '<ul><li>Steel Plate Tab → Table 1, Power Plate Mill (MWh)</li></ul>',
+                'ef'          => $t10Ef,
+                'ef_tooltip'  => '<ul><li>Table 10 Emission Factor[3] (Total row blended EF)</li></ul>',
+                'tco2'        => $tco2Plate,
+                'tco2_tooltip' => '<ul><li>MWh[1] × EF[1] / 1000</li><li>= ' . $plateMwh . ' × ' . $t10Ef . ' / 1000</li></ul>',
+                'unit'        => 'MWh',
+            ],
+            [
+                'description' => 'Electricity for HRC',
+                'mwh'         => $hrcMwh,
+                'mwh_tooltip' => '<ul><li>Steel HRC Tab → Table 1, Power HRP Plant (MWh)</li></ul>',
+                'ef'          => $efPln,
+                'ef_tooltip'  => '<ul><li>Fixed Emission Factor: 0.8700 tCO2/MWh</li></ul>',
+                'tco2'        => $tco2Hrc,
+                'tco2_tooltip' => '<ul><li>MWh[2] × EF[2] / 1000</li><li>= ' . $hrcMwh . ' × ' . $efPln . ' / 1000</li></ul>',
+                'unit'        => 'MWh',
+            ],
+            [
+                'description' => 'Total',
+                'mwh'         => $sumMwh,
+                'mwh_tooltip' => '<ul><li>Sum MWh[0]:[2]</li></ul>',
+                'ef'          => $totalEf,
+                'ef_tooltip'  => '<ul><li>Sum TCO2[0]:[2] / Sum MWh[0]:[2]</li><li>= ' . $sumTco2 . ' / ' . $sumMwh . '</li></ul>',
+                'tco2'        => $sumTco2,
+                'tco2_tooltip' => '<ul><li>Sum TCO2[0]:[2]</li></ul>',
+                'unit'        => 'MWh',
+                'is_total'    => true,
+            ],
+        ]);
+    }
+
+    // -------------------------------------------------------------------------
     // Render
     // -------------------------------------------------------------------------
 
@@ -1333,6 +1503,8 @@ class ConfigurationData extends Component
             'emissionTableData62' => $this->emissionTableData62,
             'emissionTableData8' => $this->emissionTableData8,
             'emissionTableData9' => $this->emissionTableData9,
+            'emissionTableData10' => $this->emissionTableData10,
+            'emissionTableData11b' => $this->emissionTableData11b,
         ]);
     }
 }

@@ -1050,6 +1050,136 @@
 
 
                                     </div>{{-- /col data emission --}}
+                                    {{-- ================================================================ --}}
+                                    {{-- TABLE 10 & 11 — full width, bawah section 2 kolom --}}
+                                    {{-- ================================================================ --}}
+                                    <div class="col-12">
+
+                                        {{-- Table 10 --}}
+                                        <div class="table-card">
+                                            <div class="table-card-header table-card-header-sage">
+                                                <span class="table-dot dot-sage"></span>
+                                                <h6 class="table-card-title table-card-title-sage">Table 10 – Purchased
+                                                    Electricity Emission</h6>
+                                            </div>
+                                            @if($emissionTableData10->isEmpty())
+                                            <div class="alert alert-info"><i class="ti ti-info-circle me-1"></i> Select
+                                                year &amp; period to see Table 10 data.</div>
+                                            @else
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-bordered">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th>Description</th>
+                                                            <th class="text-end">Amount (kWh)</th>
+                                                            <th class="text-end">Emission Factor (tCO2/MWh)</th>
+                                                            <th class="text-end">Total Emission</th>
+                                                            <th class="text-end">Unit</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach($emissionTableData10 as $row)
+                                                        <tr @class(['table-active fw-bold'=> !empty($row['is_total'])])>
+                                                            <td>{{ $row['description'] }}</td>
+                                                            <td class="text-end">
+                                                                {{ number_format((float)$row['amount'], 2) }}
+                                                                @if(!empty($row['amt_tooltip']))<span
+                                                                    class="badge badge-sm bg-light text-primary ms-1"
+                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                    data-bs-html="true"
+                                                                    data-bs-custom-class="tooltip-wide"
+                                                                    title="{{ $row['amt_tooltip'] }}">i</span>@endif
+                                                            </td>
+                                                            <td class="text-end">
+                                                                {{ number_format((float)$row['emission_factor'], 4) }}
+                                                                @if(!empty($row['ef_tooltip']))<span
+                                                                    class="badge badge-sm bg-light text-primary ms-1"
+                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                    data-bs-html="true"
+                                                                    data-bs-custom-class="tooltip-wide"
+                                                                    title="{{ $row['ef_tooltip'] }}">i</span>@endif
+                                                            </td>
+                                                            <td class="text-end">
+                                                                {{ number_format((float)$row['total_emission'], 2) }}
+                                                                @if(!empty($row['em_tooltip']))<span
+                                                                    class="badge badge-sm bg-light text-primary ms-1"
+                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                    data-bs-html="true"
+                                                                    data-bs-custom-class="tooltip-wide"
+                                                                    title="{{ $row['em_tooltip'] }}">i</span>@endif
+                                                            </td>
+                                                            <td class="text-end">{{ $row['unit'] }}</td>
+                                                        </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            @endif
+                                        </div>{{-- /table-10 --}}
+
+                                        {{-- Table 11 --}}
+                                        <div class="table-card">
+                                            <div class="table-card-header table-card-header-sage">
+                                                <span class="table-dot dot-sage"></span>
+                                                <h6 class="table-card-title table-card-title-sage">Table 11 –
+                                                    Electricity Summary</h6>
+                                            </div>
+                                            @if($emissionTableData11b->isEmpty())
+                                            <div class="alert alert-info"><i class="ti ti-info-circle me-1"></i> Select
+                                                year &amp; period to see Table 11 data.</div>
+                                            @else
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-bordered">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th>Description</th>
+                                                            <th class="text-end">MWh</th>
+                                                            <th class="text-end">EF (tCO2/MWh)</th>
+                                                            <th class="text-end">tCO2</th>
+                                                            <th class="text-end">Unit</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach($emissionTableData11b as $row)
+                                                        <tr @class(['table-active fw-bold'=> !empty($row['is_total'])])>
+                                                            <td>{{ $row['description'] }}</td>
+                                                            <td class="text-end">
+                                                                {{ number_format((float)$row['mwh'], 2) }}
+                                                                @if(!empty($row['mwh_tooltip']))<span
+                                                                    class="badge badge-sm bg-light text-primary ms-1"
+                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                    data-bs-html="true"
+                                                                    data-bs-custom-class="tooltip-wide"
+                                                                    title="{{ $row['mwh_tooltip'] }}">i</span>@endif
+                                                            </td>
+                                                            <td class="text-end">
+                                                                {{ number_format((float)$row['ef'], 4) }}
+                                                                @if(!empty($row['ef_tooltip']))<span
+                                                                    class="badge badge-sm bg-light text-primary ms-1"
+                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                    data-bs-html="true"
+                                                                    data-bs-custom-class="tooltip-wide"
+                                                                    title="{{ $row['ef_tooltip'] }}">i</span>@endif
+                                                            </td>
+                                                            <td class="text-end">
+                                                                {{ number_format((float)$row['tco2'], 2) }}
+                                                                @if(!empty($row['tco2_tooltip']))<span
+                                                                    class="badge badge-sm bg-light text-primary ms-1"
+                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                    data-bs-html="true"
+                                                                    data-bs-custom-class="tooltip-wide"
+                                                                    title="{{ $row['tco2_tooltip'] }}">i</span>@endif
+                                                            </td>
+                                                            <td class="text-end">{{ $row['unit'] }}</td>
+                                                        </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            @endif
+                                        </div>{{-- /table-11 --}}
+
+                                    </div>{{-- /col-12 full width --}}
 
                                 </div>{{-- /row --}}
                             </div>{{-- /tab-pane steel-slab --}}
