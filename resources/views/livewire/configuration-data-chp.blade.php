@@ -65,39 +65,36 @@
                     @endif
                 </div>
 
-
-
                 <div class="row g-4">
-                    {{-- Left: Fuel Input Quantity --}}
+
+                    {{-- LEFT COLUMN --}}
                     <div class="col-lg-6">
+
+                        {{-- Table 1 Fuel Input --}}
                         <div class="table-responsive mb-4">
                             <h5 class="mb-3">Table 1 Fuel Input (Quantity)</h5>
                             @if($chpTableData->isEmpty())
                             <div class="alert alert-info">
-                                <i class="ti ti-info-circle"></i> Select year & period or
-                                <a href="/uploadfile">Upload Energy Data</a>.
+                                <i class="ti ti-info-circle"></i> Select year &amp; period or <a
+                                    href="/uploadfile">Upload Energy Data</a>.
                             </div>
                             @else
                             <table class="table table-sm table-bordered">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Description</th>
-                                        <th>Quantity</th>
-                                        <th>Unit</th>
+                                        <th class="text-end">Quantity</th>
+                                        <th class="text-end">Unit</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($chpTableData as $row)
                                     <tr>
-                                        <td>
-                                            {{ $row['description'] }}
-                                            @if(!empty($row['tooltip']))
-                                            <span class="badge badge-sm bg-light text-primary ms-1"
+                                        <td>{{ $row['description'] }}@if(!empty($row['tooltip']))<span
+                                                class="badge badge-sm bg-light text-primary ms-1"
                                                 data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
                                                 data-bs-custom-class="tooltip-wide"
-                                                title="{{ $row['tooltip'] }}">i</span>
-                                            @endif
-                                        </td>
+                                                title="{{ $row['tooltip'] }}">i</span>@endif</td>
                                         <td class="text-end">{{ number_format($row['quantity'], 2) }}</td>
                                         <td class="text-end">Nm³ or ton</td>
                                     </tr>
@@ -112,29 +109,25 @@
                             <h5 class="mb-3">Table 2 Steam Output (Quantity)</h5>
                             @if($steamTableData->isEmpty())
                             <div class="alert alert-info">
-                                <i class="ti ti-info-circle"></i> Select year & period to see Steam Output data.
+                                <i class="ti ti-info-circle"></i> Select year &amp; period to see Steam Output data.
                             </div>
                             @else
                             <table class="table table-sm table-bordered">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Description</th>
-                                        <th>Quantity</th>
-                                        <th>Unit</th>
+                                        <th class="text-end">Quantity</th>
+                                        <th class="text-end">Unit</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($steamTableData as $row)
                                     <tr>
-                                        <td>
-                                            {{ $row['description'] }}
-                                            @if(!empty($row['tooltip']))
-                                            <span class="badge badge-sm bg-light text-primary ms-1"
+                                        <td>{{ $row['description'] }}@if(!empty($row['tooltip']))<span
+                                                class="badge badge-sm bg-light text-primary ms-1"
                                                 data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
                                                 data-bs-custom-class="tooltip-wide"
-                                                title="{{ $row['tooltip'] }}">i</span>
-                                            @endif
-                                        </td>
+                                                title="{{ $row['tooltip'] }}">i</span>@endif</td>
                                         <td class="text-end">{{ number_format($row['quantity'], 2) }}</td>
                                         <td class="text-end">ton</td>
                                     </tr>
@@ -145,47 +138,41 @@
                         </div>
 
                         {{-- Table 3 Electricity Output --}}
-                        <div class="table-responsive">
+                        <div class="table-responsive mb-4">
                             <h5 class="mb-3">Table 3 Electricity Output</h5>
-                            @if($electricityTableData->isEmpty() || $electricityTableData[0]['quantity'] == 0)
+                            @if($electricityTableData->isEmpty() || ($electricityTableData[0]['quantity'] ?? 0) == 0)
                             <div class="alert alert-info">
-                                <i class="ti ti-info-circle"></i> Select year & period to see Electricity Output data.
+                                <i class="ti ti-info-circle"></i> Select year &amp; period to see Electricity Output
+                                data.
                             </div>
                             @else
                             <table class="table table-sm table-bordered">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Description</th>
-                                        <th>Quantity</th>
-                                        <th>Unit</th>
+                                        <th class="text-end">Quantity</th>
+                                        <th class="text-end">Unit</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($electricityTableData as $row)
                                     <tr>
-                                        <td>{{ $row['description'] }}</td>
-                                        <td>
-                                            {{ number_format($row['quantity'], 0) }}
-                                            @if(!empty($row['tooltip']))
-                                            <span class="badge badge-sm bg-light text-primary ms-1"
+                                        <td>{{ $row['description'] }}@if(!empty($row['tooltip']))<span
+                                                class="badge badge-sm bg-light text-primary ms-1"
                                                 data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
                                                 data-bs-custom-class="tooltip-wide"
-                                                title="{{ $row['tooltip'] }}">i</span>
-                                            @endif
-                                        </td>
-                                        <td>kWh</td>
+                                                title="{{ $row['tooltip'] }}">i</span>@endif</td>
+                                        <td class="text-end">{{ number_format($row['quantity'], 0) }}</td>
+                                        <td class="text-end">kWh</td>
                                     </tr>
                                     <tr>
-                                        <td>{{ $row['description'] }} / 1000</td>
-                                        <td class="text-end">{{ number_format($row['quantity_mwh'], 2) }}
-                                            @if(isset($row['tooltip_mwh']))
-                                            <span class="badge badge-sm bg-light text-primary ms-1"
+                                        <td>{{ $row['description'] }} / 1000@if(isset($row['tooltip_mwh']))<span
+                                                class="badge badge-sm bg-light text-primary ms-1"
                                                 data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
                                                 data-bs-custom-class="tooltip-wide"
-                                                title="{{ $row['tooltip_mwh'] }}">i</span>
-                                            @endif
-                                        </td>
-                                        <td>MWh</td>
+                                                title="{{ $row['tooltip_mwh'] }}">i</span></td>
+                                        <td class="text-end">{{ number_format($row['quantity_mwh'], 2) }}</td>
+                                        <td class="text-end">MWh</td>
                                     </tr>
                                     @endforeach
                                 </tbody>
@@ -193,8 +180,7 @@
                             @endif
                         </div>
 
-                        {{-- Table 4 Coke Oven Coke --}}
-                        <br>
+                        {{-- Table 4 Coke --}}
                         <div class="table-responsive mb-4">
                             <h5 class="mb-3">Table 4 Coke Oven Coke</h5>
                             <table class="table table-sm table-bordered">
@@ -202,8 +188,8 @@
                                     <tr>
                                         <th>Plant</th>
                                         <th>Source</th>
-                                        <th>Quantity</th>
-                                        <th>Unit</th>
+                                        <th class="text-end">Quantity</th>
+                                        <th class="text-end">Unit</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -211,26 +197,25 @@
                                     <tr>
                                         <td>{{ $row['plant'] }}</td>
                                         <td>{{ $row['source'] }}</td>
-                                        <td class="text-end">
-                                            {{ number_format($row['quantity'], 2) }}
-                                            @if(!empty($row['tooltip']))
-                                            <span class="badge badge-sm bg-light text-primary ms-1"
+                                        <td class="text-end">{{ number_format($row['quantity'], 2)
+                                            }}@if(!empty($row['tooltip']))<span
+                                                class="badge badge-sm bg-light text-primary ms-1"
                                                 data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
                                                 data-bs-custom-class="tooltip-wide"
-                                                title="{!! $row['tooltip'] !!}">i</span>
-                                            @endif
-                                        </td>
+                                                title="{!! $row['tooltip'] !!}">i</span>@endif</td>
                                         <td class="text-end">{{ $row['unit'] }}</td>
                                     </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
-                    </div>
 
-                    {{-- Right column --}}
+                    </div>{{-- /col-lg-6 left --}}
+
+                    {{-- RIGHT COLUMN --}}
                     <div class="col-lg-6">
-                        {{-- Table 1 Fuel Input Emission --}}
+
+                        {{-- Table 1.1 Fuel Input Emission --}}
                         <div class="table-responsive mb-4">
                             <h5 class="mb-3">Table 1.1 Fuel Input Emission</h5>
                             @if($emissionTableData->isEmpty())
@@ -242,26 +227,22 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th>Conversion</th>
-                                        <th>By Product Gas (Tj)</th>
-                                        <th>Unit (Tj)</th>
+                                        <th class="text-end">By Product Gas (Tj)</th>
+                                        <th class="text-end">Unit</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($emissionTableData as $index => $row)
+                                    @foreach($emissionTableData as $row)
                                     <tr>
                                         <td>{{ $row['conversion'] === 'Total' ? 'Total' :
-                                            number_format($row['conversion'], 10) }}
-
-                                        </td>
-                                        <td class="text-end">{{ number_format($row['tj'], 2) }}
-                                            @if(!empty($row['tooltip']))
-                                            <span class="badge badge-sm bg-light text-primary ms-1"
+                                            number_format($row['conversion'], 10) }}</td>
+                                        <td class="text-end">{{ number_format($row['tj'], 2)
+                                            }}@if(!empty($row['tooltip']))<span
+                                                class="badge badge-sm bg-light text-primary ms-1"
                                                 data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
                                                 data-bs-custom-class="tooltip-wide"
-                                                title="{{ $row['tooltip'] }}">i</span>
-                                            @endif
-                                        </td>
-                                        <td>Tj</td>
+                                                title="{{ $row['tooltip'] }}">i</span>@endif</td>
+                                        <td class="text-end">Tj</td>
                                     </tr>
                                     @endforeach
                                 </tbody>
@@ -272,17 +253,17 @@
                         {{-- Table 2.2 Steam Output Conversion --}}
                         <div class="table-responsive mb-4">
                             <h5 class="mb-3">Table 2.2 Steam Output Conversion</h5>
-                            @if($steamConversionTableData->isEmpty() || empty($steamTableData))
+                            @if($steamConversionTableData->isEmpty())
                             <div class="alert alert-info">
-                                <i class="ti ti-info-circle"></i> Select year & period to see Steam Conversion data.
+                                <i class="ti ti-info-circle"></i> Select year &amp; period to see Steam Conversion data.
                             </div>
                             @else
                             <table class="table table-sm table-bordered">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Conversion</th>
-                                        <th>Steam</th>
-                                        <th>Unit</th>
+                                        <th class="text-end">Steam</th>
+                                        <th class="text-end">Unit</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -290,18 +271,15 @@
                                     <tr>
                                         <td>{{ $row['conversion'] }}</td>
                                         <td class="text-end">
-                                            {{ is_numeric($row['steam']) ? number_format($row['steam'],
-                                            $row['unit'] === 'tCO2/Tj' ? 4 :
-                                            ($row['unit'] === 'tCo2/ton' ? 3 :
-                                            ($row['unit'] === 'Tj' ? 2 : 2))) : $row['steam'] }}
-                                            @if(!empty($row['tooltip']))
-                                            <span class="badge badge-sm bg-light text-primary ms-1"
+                                            {{ is_numeric($row['steam']) ? number_format($row['steam'], $row['unit'] ===
+                                            'tCO2/Tj' ? 4 : ($row['unit'] === 'tCo2/ton' ? 3 : 2)) : $row['steam'] }}
+                                            @if(!empty($row['tooltip']))<span
+                                                class="badge badge-sm bg-light text-primary ms-1"
                                                 data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
                                                 data-bs-custom-class="tooltip-wide"
-                                                title="{{ $row['tooltip'] }}">i</span>
-                                            @endif
+                                                title="{{ $row['tooltip'] }}">i</span>@endif
                                         </td>
-                                        <td>{{ $row['unit'] }}</td>
+                                        <td class="text-end">{{ $row['unit'] }}</td>
                                     </tr>
                                     @endforeach
                                 </tbody>
@@ -311,10 +289,10 @@
 
                         {{-- Table 3.3 Electricity Output Conversion --}}
                         <div class="table-responsive mb-4">
-                            <h5 class="mb-3">Table 3.3 Steam Output Conversion</h5>
-                            @if($electricityConversionTableData->isEmpty() || empty($electricityTableData))
+                            <h5 class="mb-3">Table 3.3 Electricity Output Conversion</h5>
+                            @if($electricityConversionTableData->isEmpty())
                             <div class="alert alert-info">
-                                <i class="ti ti-info-circle"></i> Select year & period to see Electricity Conversion
+                                <i class="ti ti-info-circle"></i> Select year &amp; period to see Electricity Conversion
                                 data.
                             </div>
                             @else
@@ -322,119 +300,209 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th>Conversion</th>
-                                        <th>Electricity</th>
-                                        <th>Unit</th>
+                                        <th class="text-end">Electricity</th>
+                                        <th class="text-end">Unit</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($electricityConversionTableData as $row)
                                     <tr>
                                         <td>{{ $row['conversion'] }}</td>
-                                        <td class="text-end">{{ number_format($row['electricity'], 1) }}
-                                            @if(!empty($row['tooltip']))
-                                            <span class="badge badge-sm bg-light text-primary ms-1"
+                                        <td class="text-end">{{ number_format($row['electricity'], 1)
+                                            }}@if(!empty($row['tooltip']))<span
+                                                class="badge badge-sm bg-light text-primary ms-1"
                                                 data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
                                                 data-bs-custom-class="tooltip-wide"
-                                                title="{{ $row['tooltip'] }}">i</span>
-                                            @endif
-                                        </td>
-                                        <td>{{ $row['unit'] }}</td>
+                                                title="{{ $row['tooltip'] }}">i</span>@endif</td>
+                                        <td class="text-end">{{ $row['unit'] }}</td>
                                     </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                             @endif
                         </div>
-                    </div>
+
+                    </div>{{-- /col-lg-6 right --}}
+
+                </div>{{-- /row g-4 --}}
+
+                {{-- ================================================================ --}}
+                {{-- TABLE 5, 6, 7, 8, 9 — full width --}}
+                {{-- ================================================================ --}}
+
+                {{-- Table 5 Power Emission Factor From KPE --}}
+                <div class="table-responsive mb-4">
+                    <h5 class="mb-3">Table 5 Power Emission Factor From KPE</h5>
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Emission Factor (tCO2/Tj)</th>
+                                <th class="text-end">Total Emission</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($powerEmissionKpeData as $row)
+                            <tr>
+                                <td>{{ $row['factor'] }}</td>
+                                <td class="text-end">{{ is_numeric($row['total_emission']) ?
+                                    number_format($row['total_emission'], 2) : $row['total_emission']
+                                    }}@if(!empty($row['tooltip']))<span
+                                        class="badge badge-sm bg-light text-primary ms-1" data-bs-toggle="tooltip"
+                                        data-bs-placement="top" data-bs-html="true" data-bs-custom-class="tooltip-wide"
+                                        title="{!! $row['tooltip'] !!}">i</span>@endif</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
 
-                {{-- Table 5 Power Emission Factor From KPE — full width, below left/right grouping --}}
-                <div class="row">
-                    <div class="border border-warning bg-warning-subtle p-3 mb-3 rounded">
-                        <h5 class="text-center m-0 text-primary-emphasis">Power Emission Factor From KPE
-                        </h5>
+                {{-- Table 6 Steam Emission Factor From KPE --}}
+                <div class="table-responsive mb-4">
+                    <h5 class="mb-3">Table 6 Steam Emission Factor From KPE</h5>
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Emission Factor (tCO2/Tj)</th>
+                                <th class="text-end">Total Emission</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($steamEmissionKpeData as $row)
+                            <tr>
+                                <td>{{ $row['factor'] }}</td>
+                                <td class="text-end">{{ is_numeric($row['total_emission']) ?
+                                    number_format($row['total_emission'], 2) : $row['total_emission']
+                                    }}@if(!empty($row['tooltip']))<span
+                                        class="badge badge-sm bg-light text-primary ms-1" data-bs-toggle="tooltip"
+                                        data-bs-placement="top" data-bs-html="true" data-bs-custom-class="tooltip-wide"
+                                        title="{{ $row['tooltip'] }}">i</span>@endif</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- Table 7 Emission Factor (tCO2/Tj) & Total Emission --}}
+                <div class="table-responsive mb-4">
+                    <h5 class="mb-3">Table 7 Emission Factor (tCO2/Tj) &amp; Total Emission</h5>
+                    @if($table7Data->isEmpty())
+                    <div class="alert alert-info">
+                        <i class="ti ti-info-circle"></i> Select year &amp; period to see Table 7 data.
                     </div>
-                    <div class="col-12">
-                        <div class="table-responsive mb-4">
+                    @else
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Emission Factor (tCO2/Tj)</th>
+                                <th class="text-end">Total Emission</th>
+                                <th class="text-end">Unit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($table7Data as $row)
+                            <tr @class(['table-active fw-bold'=> $row['factor'] === 'Total Emission'])>
+                                <td>{{ $row['factor'] }}</td>
+                                <td class="text-end">
+                                    {{ number_format((float)$row['total_emission'], 2) }}
+                                    @if(!empty($row['tooltip']))<span class="badge badge-sm bg-light text-primary ms-1"
+                                        data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
+                                        data-bs-custom-class="tooltip-wide" title="{{ $row['tooltip'] }}">i</span>@endif
+                                </td>
+                                <td class="text-end">{{ $row['unit'] }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                    @endif
+                </div>
 
-                            <h5 class=" m-0 text-primary-emphasis">Table 5 Power Emission Factor From KPE
-                            </h5>
-                            <br>
-
-                            <table class="table table-sm table-bordered">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Emission Factor (TCO2/Tj)</th>
-                                        <th>Total Emission</th>
-
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($powerEmissionKpeData as $row)
-                                    <tr>
-                                        <td>
-                                            {{ $row['factor'] }}
-
-                                        </td>
-                                        <td class="text-end">
-                                            {{ is_numeric($row['total_emission']) ?
-                                            number_format($row['total_emission'], 2) : $row['total_emission'] }}
-                                            @if(!empty($row['tooltip']))
-                                            <span class="badge badge-sm bg-light text-primary ms-1"
-                                                data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
-                                                data-bs-custom-class="tooltip-wide"
-                                                title="{!! $row['tooltip'] !!}">i</span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        {{-- Table 6 Steam Emission Factor From KPE --}}
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="table-responsive mb-4">
-                                    <h5 class="mb-3">Table 6 Steam Emission Factor From KPE</h5>
-                                    <table class="table table-sm table-bordered">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th>Emission Factor (TCO2/Tj)</th>
-                                                <th>Total Emission</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach($steamEmissionKpeData as $row)
-                                            <tr>
-                                                <td>{{ $row['factor'] }}</td>
-                                                <td class="text-end">
-                                                    {{ is_numeric($row['total_emission']) ?
-                                                    number_format($row['total_emission'], 2) : $row['total_emission'] }}
-                                                    @if(!empty($row['tooltip']))
-                                                    <span class="badge badge-sm bg-light text-primary ms-1"
-                                                        data-bs-toggle="tooltip" data-bs-placement="top"
-                                                        data-bs-html="true" data-bs-custom-class="tooltip-wide"
-                                                        title="{{ $row['tooltip'] }}">i</span>
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
+                {{-- Table 8 Emission From Generation --}}
+                <div class="table-responsive mb-4">
+                    <h5 class="mb-3">Table 8 Emission From Generation</h5>
+                    @if($table8Data->isEmpty())
+                    <div class="alert alert-info">
+                        <i class="ti ti-info-circle"></i> Select year &amp; period to see Table 8 data.
                     </div>
+                    @else
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Description</th>
+                                <th class="text-end">Quantity</th>
+                                <th class="text-end">Unit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($table8Data as $row)
+                            <tr>
+                                <td>{{ $row['description'] }}@if(!empty($row['tooltip']))<span
+                                        class="badge badge-sm bg-light text-primary ms-1" data-bs-toggle="tooltip"
+                                        data-bs-placement="top" data-bs-html="true" data-bs-custom-class="tooltip-wide"
+                                        title="{{ $row['tooltip'] }}">i</span>@endif</td>
+                                <td class="text-end">{{ number_format((float)$row['quantity'], 2) }}</td>
+                                <td class="text-end">{{ $row['unit'] }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                    @endif
+                </div>
+
+                {{-- Table 9 Emission Factor From KPW --}}
+                <div class="table-responsive mb-4">
+                    <h5 class="mb-3">Table 9 Emission Factor From KPW</h5>
+
+                    @if($table9Data->isEmpty())
+                    <div class="alert alert-info">
+                        <i class="ti ti-info-circle"></i> Select year &amp; period to see Table 9 data.
+                    </div>
+                    @else
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Description</th>
+                                <th class="text-end">Quantity</th>
+                                <th class="text-end">Unit</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach($table9Data as $row)
+                            <tr>
+                                <td>
+                                    {{ $row['description'] }}
+
+                                    @if(!empty($row['tooltip']))
+                                    <span class="badge badge-sm bg-light text-primary ms-1" data-bs-toggle="tooltip"
+                                        data-bs-placement="top" data-bs-html="true" data-bs-custom-class="tooltip-wide"
+                                        title="{{ $row['tooltip'] }}">
+                                        i
+                                    </span>
+                                    @endif
+                                </td>
+
+                                <td class="text-end">
+                                    <span class="badge bg-success text-white px-3 py-2">
+                                        {{ number_format((float)$row['quantity'], 4) }}
+                                    </span>
+                                </td>
+
+                                <td class="text-end">{{ $row['unit'] }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                    @endif
                 </div>
 
             </div>
         </div>
     </div>
+</div>
 
-    @push('scripts')
-    <script>
-        function initTooltips() {
-        // Destroy dulu semua tooltip lama sebelum buat baru
+@push('scripts')
+<script>
+    function initTooltips() {
         document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
             const existing = bootstrap.Tooltip.getInstance(el);
             if (existing) existing.dispose();
@@ -442,19 +510,11 @@
         });
     }
 
-    // Saat pertama load
     document.addEventListener('DOMContentLoaded', initTooltips);
-
-    // Saat Livewire navigasi
     document.addEventListener('livewire:navigated', initTooltips);
-
-    // Saat Livewire update DOM (re-render setelah filter berubah)
     document.addEventListener('livewire:morph.updated', initTooltips);
     Livewire.hook('commit', ({ succeed }) => {
-        succeed(() => {
-            requestAnimationFrame(initTooltips);
-        });
+        succeed(() => requestAnimationFrame(initTooltips));
     });
-    </script>
-    @endpush
-</div>
+</script>
+@endpush
