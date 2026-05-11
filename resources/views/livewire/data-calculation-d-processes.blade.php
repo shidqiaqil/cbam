@@ -179,7 +179,7 @@
                     <td class="text-end font-monospace">
                         @if($hImportedHeat !== null)
                         <div class="d-flex align-items-center justify-content-end gap-1 flex-nowrap">
-                            <span class="fw-semibold text-success text-nowrap">{{ number_format($hImportedHeat, 4)
+                            <span class="fw-semibold text-success text-nowrap">{{ number_format($hImportedHeat, 2)
                                 }}</span>
                             <span class="badge badge-sm bg-light text-primary flex-shrink-0" data-bs-toggle="tooltip"
                                 data-bs-placement="left" data-bs-html="true" data-bs-custom-class="tooltip-wide"
@@ -194,7 +194,7 @@
                     <td class="text-end font-monospace">
                         @if($hExportedHeat !== null)
                         <div class="d-flex align-items-center justify-content-end gap-1 flex-nowrap">
-                            <span class="fw-semibold text-nowrap">{{ number_format($hExportedHeat, 4) }}</span>
+                            <span class="fw-semibold text-nowrap">{{ number_format($hExportedHeat, 2) }}</span>
                             <span class="badge badge-sm bg-light text-primary flex-shrink-0" data-bs-toggle="tooltip"
                                 data-bs-placement="left" data-bs-html="true" data-bs-custom-class="tooltip-wide"
                                 title="{{ $tooltipHExportedHeat }}">i</span>
@@ -216,7 +216,7 @@
                     <td class="text-end font-monospace">
                         @if($hImportedEF !== null)
                         <div class="d-flex align-items-center justify-content-end gap-1 flex-nowrap">
-                            <span class="fw-semibold text-success text-nowrap">{{ number_format($hImportedEF, 4)
+                            <span class="fw-semibold text-success text-nowrap">{{ number_format($hImportedEF, 2)
                                 }}</span>
                             <span class="badge badge-sm bg-light text-primary flex-shrink-0" data-bs-toggle="tooltip"
                                 data-bs-placement="left" data-bs-html="true" data-bs-custom-class="tooltip-wide"
@@ -231,7 +231,7 @@
                     <td class="text-end font-monospace">
                         @if($hExportedEF !== null)
                         <div class="d-flex align-items-center justify-content-end gap-1 flex-nowrap">
-                            <span class="fw-semibold text-nowrap">{{ number_format($hExportedEF, 4) }}</span>
+                            <span class="fw-semibold text-nowrap">{{ number_format($hExportedEF, 2) }}</span>
                             <span class="badge badge-sm bg-light text-primary flex-shrink-0" data-bs-toggle="tooltip"
                                 data-bs-placement="left" data-bs-html="true" data-bs-custom-class="tooltip-wide"
                                 title="{{ $tooltipHExportedEF }}">i</span>
@@ -278,7 +278,7 @@
                     <td class="text-end font-monospace">
                         @if($iImportedAmount !== null)
                         <div class="d-flex align-items-center justify-content-end gap-1 flex-nowrap">
-                            <span class="fw-semibold text-success text-nowrap">{{ number_format($iImportedAmount, 4)
+                            <span class="fw-semibold text-success text-nowrap">{{ number_format($iImportedAmount, 2)
                                 }}</span>
                             <span class="badge badge-sm bg-light text-primary flex-shrink-0" data-bs-toggle="tooltip"
                                 data-bs-placement="left" data-bs-html="true" data-bs-custom-class="tooltip-wide"
@@ -291,7 +291,7 @@
                     <td class="text-end font-monospace">
                         @if($iExportedAmount !== null)
                         <div class="d-flex align-items-center justify-content-end gap-1 flex-nowrap">
-                            <span class="fw-semibold text-nowrap">{{ number_format($iExportedAmount, 4) }}</span>
+                            <span class="fw-semibold text-nowrap">{{ number_format($iExportedAmount, 2) }}</span>
                             <span class="badge badge-sm bg-light text-primary flex-shrink-0" data-bs-toggle="tooltip"
                                 data-bs-placement="left" data-bs-html="true" data-bs-custom-class="tooltip-wide"
                                 title="{{ $tooltipIExportedAmount }}">i</span>
@@ -311,7 +311,7 @@
                     <td class="text-end font-monospace">
                         @if($iImportedEF !== null)
                         <div class="d-flex align-items-center justify-content-end gap-1 flex-nowrap">
-                            <span class="fw-semibold text-success text-nowrap">{{ number_format($iImportedEF, 4)
+                            <span class="fw-semibold text-success text-nowrap">{{ number_format($iImportedEF, 2)
                                 }}</span>
                             <span class="badge badge-sm bg-light text-primary flex-shrink-0" data-bs-toggle="tooltip"
                                 data-bs-placement="left" data-bs-html="true" data-bs-custom-class="tooltip-wide"
@@ -324,7 +324,7 @@
                     <td class="text-end font-monospace">
                         @if($iExportedEF !== null)
                         <div class="d-flex align-items-center justify-content-end gap-1 flex-nowrap">
-                            <span class="fw-semibold text-nowrap">{{ number_format($iExportedEF, 4) }}</span>
+                            <span class="fw-semibold text-nowrap">{{ number_format($iExportedEF, 2) }}</span>
                             <span class="badge badge-sm bg-light text-primary flex-shrink-0" data-bs-toggle="tooltip"
                                 data-bs-placement="left" data-bs-html="true" data-bs-custom-class="tooltip-wide"
                                 title="{{ $tooltipIExportedEF }}">i</span>
@@ -370,7 +370,7 @@
                     <td class="text-end font-monospace">
                         @if($jElecConsumption !== null)
                         <div class="d-flex align-items-center justify-content-end gap-1 flex-nowrap">
-                            <span class="fw-semibold text-success text-nowrap">{{ number_format($jElecConsumption, 3)
+                            <span class="fw-semibold text-success text-nowrap">{{ number_format($jElecConsumption, 2)
                                 }}</span>
                             <span class="badge badge-sm bg-light text-primary flex-shrink-0" data-bs-toggle="tooltip"
                                 data-bs-placement="left" data-bs-html="true" data-bs-custom-class="tooltip-wide"
@@ -437,7 +437,7 @@
                     <td class="text-end font-monospace">
                         @if($kAmountsExported !== null)
                         <div class="d-flex align-items-center justify-content-end gap-1 flex-nowrap">
-                            <span class="fw-semibold text-success text-nowrap">{{ number_format($kAmountsExported, 3)
+                            <span class="fw-semibold text-success text-nowrap">{{ number_format($kAmountsExported, 2)
                                 }}</span>
                             <span class="badge badge-sm bg-light text-primary flex-shrink-0" data-bs-toggle="tooltip"
                                 data-bs-placement="left" data-bs-html="true" data-bs-custom-class="tooltip-wide"

@@ -42,7 +42,8 @@ class PcoDataImport implements ToCollection, WithHeadingRow, WithChunkReading
             if (empty($row['criteria'])) continue;
 
             $monthCode = self::getMonthCode($this->period_month);
-            $quantity = round((float) ($row[$monthCode] ?? 0), 2);
+            // $quantity = round((float) ($row[$monthCode] ?? 0), 2);
+            $quantity = round((float) str_replace(',', '.', str_replace('.', '', (string) ($row[$monthCode] ?? 0))), 2);
 
             MasterPco::updateOrCreate(
                 [

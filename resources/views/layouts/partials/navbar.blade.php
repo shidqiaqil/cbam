@@ -1,3 +1,38 @@
+<style>
+    .navbar-nav .nav-link.active {
+        background-color: #E6F1FB;
+        color: #0C447C !important;
+        font-weight: 500;
+        border-radius: 6px;
+        border: 0.5px solid #B5D4F4;
+    }
+
+    [data-bs-theme="dark"] .navbar-nav .nav-link.active {
+        background-color: #0C447C;
+        color: #B5D4F4 !important;
+        border-color: #185FA5;
+    }
+
+    .navbar-nav .nav-link.active svg {
+        stroke: #0C447C;
+    }
+
+    [data-bs-theme="dark"] .navbar-nav .nav-link.active svg {
+        stroke: #B5D4F4;
+    }
+
+    .navbar .dropdown-menu .dropdown-item.active,
+    .navbar .dropdown-menu .dropdown-item:active {
+        background-color: #E6F1FB;
+        color: #0C447C;
+        font-weight: 500;
+    }
+
+    [data-bs-theme="dark"] .navbar .dropdown-menu .dropdown-item.active {
+        background-color: #0C447C;
+        color: #B5D4F4;
+    }
+</style>
 <div class="page">
     <!-- BEGIN NAVBAR  -->
     <header class="navbar navbar-expand-md d-print-none">
@@ -27,7 +62,6 @@
                     <div class="nav-item">
                         <a href="?theme=dark" class="nav-link px-0 hide-theme-dark" title="Enable dark mode"
                             data-bs-toggle="tooltip" data-bs-placement="bottom">
-                            <!-- Download SVG icon from http://tabler.io/icons/icon/moon -->
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                 stroke-linejoin="round" class="icon icon-1">
@@ -37,7 +71,6 @@
                         </a>
                         <a href="?theme=light" class="nav-link px-0 hide-theme-light" title="Enable light mode"
                             data-bs-toggle="tooltip" data-bs-placement="bottom">
-                            <!-- Download SVG icon from http://tabler.io/icons/icon/sun -->
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                 stroke-linejoin="round" class="icon icon-1">
@@ -47,23 +80,35 @@
                             </svg>
                         </a>
                     </div>
-
-
                 </div>
+
+                @auth
                 <div class="nav-item dropdown">
                     <a href="#" class="nav-link d-flex lh-1 p-0 px-2" data-bs-toggle="dropdown"
                         aria-label="Open user menu">
                         <span class="avatar avatar-sm" style="background-image: url(./static/avatars/000m.jpg)">
                         </span>
                         <div class="d-none d-xl-block ps-2">
-                            <div>Paweł Kuna</div>
-                            <div class="mt-1 small text-secondary">UI Designer</div>
+                            <div>{{ auth()->user()->name }}</div>
+                            <div class="mt-1 small text-secondary">{{ auth()->user()->role_name ?? '' }}</div>
                         </div>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                        <a href="./sign-in.html" class="dropdown-item">Logout</a>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="dropdown-item">Logout</button>
+                        </form>
                     </div>
                 </div>
+                @else
+                <div class="nav-item">
+                    @if(Route::has('login'))
+                    <a class="nav-link" href="{{ route('login') }}">Login</a>
+                    @else
+                    <a class="nav-link" href="{{ url('/login') }}">Login</a>
+                    @endif
+                </div>
+                @endauth
             </div>
         </div>
     </header>
@@ -75,12 +120,12 @@
                         <div class="col">
                             <!-- BEGIN NAVBAR MENU -->
                             <ul class="navbar-nav">
+
+                                {{-- Dashboard --}}
                                 <li class="nav-item">
                                     <a @class(['nav-link', 'active'=> request()->routeIs('dashboard')]) href="{{
                                         route('dashboard') }}">
-
                                         <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                            <!-- Download SVG icon from http://tabler.io/icons/icon/home -->
                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                                 stroke-linecap="round" stroke-linejoin="round" class="icon icon-1">
@@ -89,15 +134,15 @@
                                                 <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
                                             </svg>
                                         </span>
-                                        <span class="nav-link-title"> Dashboard </span>
+                                        <span class="nav-link-title">Dashboard</span>
                                     </a>
                                 </li>
+
+                                {{-- Upload File --}}
                                 <li class="nav-item">
                                     <a @class(['nav-link', 'active'=> request()->routeIs('uploadfile')]) href="{{
                                         route('uploadfile') }}">
-
                                         <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                            <!-- Download SVG icon from http://tabler.io/icons/icon/home -->
                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                                 stroke-linecap="round" stroke-linejoin="round"
@@ -108,15 +153,18 @@
                                                 <path d="M12 4l0 12" />
                                             </svg>
                                         </span>
-                                        <span class="nav-link-title"> Upload File </span>
+                                        <span class="nav-link-title">Upload File</span>
                                     </a>
                                 </li>
+
+                                {{-- Master Data --}}
                                 <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle @class(['active'=> request()->routeIs('masterdata')])"
+                                    <a @class(['nav-link', 'dropdown-toggle' , 'active'=>
+                                        request()->routeIs('pcomaster', 'energymaster', 'sintermaster',
+                                        'steelmakingmaster', 'bfmaster', 'byproductmaster')])
                                         href="#" id="masterdataDropdown" role="button" data-bs-toggle="dropdown"
                                         aria-expanded="false">
                                         <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                            <!-- Download SVG icon from http://tabler.io/icons/icon/database-export -->
                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                                 stroke-linecap="round" stroke-linejoin="round"
@@ -131,28 +179,31 @@
                                                 <path d="M19 16l3 3l-3 3" />
                                             </svg>
                                         </span>
-                                        <span class="nav-link-title"> Master Data </span>
+                                        <span class="nav-link-title">Master Data</span>
                                     </a>
                                     <ul class="dropdown-menu" aria-labelledby="masterdataDropdown">
-                                        <li><a class="dropdown-item" href="{{ route('pcomaster') }}">PCO</a></li>
-                                        <li><a class="dropdown-item" href="{{ route('energymaster') }}">Energy</a></li>
-                                        <li><a class="dropdown-item" href="{{ route('sintermaster') }}">Sinter</a></li>
-                                        <li><a class="dropdown-item" href="{{ route('steelmakingmaster') }}">Steel
-                                                Making</a></li>
-                                        <li><a class="dropdown-item" href="{{ route('bfmaster') }}">Blast Furnace</a>
-                                        </li>
-                                        <li><a class="dropdown-item" href="{{ route('byproductmaster') }}">Byproduct</a>
-                                        </li>
-
-
+                                        <li><a @class(['dropdown-item', 'active'=> request()->routeIs('pcomaster')])
+                                                href="{{ route('pcomaster') }}">PCO</a></li>
+                                        <li><a @class(['dropdown-item', 'active'=> request()->routeIs('energymaster')])
+                                                href="{{ route('energymaster') }}">Energy</a></li>
+                                        <li><a @class(['dropdown-item', 'active'=> request()->routeIs('sintermaster')])
+                                                href="{{ route('sintermaster') }}">Sinter</a></li>
+                                        <li><a @class(['dropdown-item', 'active'=>
+                                                request()->routeIs('steelmakingmaster')]) href="{{
+                                                route('steelmakingmaster') }}">Steel Making</a></li>
+                                        <li><a @class(['dropdown-item', 'active'=> request()->routeIs('bfmaster')])
+                                                href="{{ route('bfmaster') }}">Blast Furnace</a></li>
+                                        <li><a @class(['dropdown-item', 'active'=>
+                                                request()->routeIs('byproductmaster')]) href="{{
+                                                route('byproductmaster') }}">Byproduct</a></li>
                                     </ul>
                                 </li>
+
+                                {{-- Data Configuration --}}
                                 <li class="nav-item">
                                     <a @class(['nav-link', 'active'=> request()->routeIs('configurationdata')]) href="{{
                                         route('configurationdata') }}">
-
                                         <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                            <!-- Download SVG icon from http://tabler.io/icons/icon/home -->
                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                                 stroke-linecap="round" stroke-linejoin="round"
@@ -165,16 +216,15 @@
                                                 <path d="M19 22v.01" />
                                             </svg>
                                         </span>
-                                        <span class="nav-link-title"> Data Configuration </span>
+                                        <span class="nav-link-title">Data Configuration</span>
                                     </a>
                                 </li>
 
+                                {{-- Data Calculation --}}
                                 <li class="nav-item">
                                     <a @class(['nav-link', 'active'=> request()->routeIs('datacalculation')]) href="{{
                                         route('datacalculation') }}">
-
                                         <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                            <!-- Download SVG icon from http://tabler.io/icons/icon/calculator -->
                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                                 stroke-linecap="round" stroke-linejoin="round"
@@ -192,13 +242,14 @@
                                                 <path d="M16 17l0 .01" />
                                             </svg>
                                         </span>
-                                        <span class="nav-link-title"> Data Calculation </span>
+                                        <span class="nav-link-title">Data Calculation</span>
                                     </a>
                                 </li>
+
+                                {{-- Report --}}
                                 <li class="nav-item">
-                                    <a class="nav-link" href="./">
+                                    <a @class(['nav-link', 'active'=> request()->routeIs('report')]) href="">
                                         <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                            <!-- Download SVG icon from http://tabler.io/icons/icon/home -->
                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                                 stroke-linecap="round" stroke-linejoin="round"
@@ -213,15 +264,37 @@
                                                 <path d="M15 17v-3" />
                                             </svg>
                                         </span>
-                                        <span class="nav-link-title"> Report </span>
+                                        <span class="nav-link-title">Report</span>
                                     </a>
                                 </li>
 
+                                {{-- User Management --}}
+                                <li class="nav-item">
+                                    <a @class(['nav-link', 'active'=> request()->routeIs('users')]) href="{{
+                                        route('users') }}">
+                                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round"
+                                                class="icon icon-tabler icons-tabler-outline icon-tabler-users">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                                                <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+                                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                                <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
+                                            </svg>
+                                        </span>
+                                        <span class="nav-link-title">User Management</span>
+                                    </a>
+                                </li>
 
+                            </ul>
+                            <!-- END NAVBAR MENU -->
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
     </header>
     <!-- END NAVBAR  -->
 </div>

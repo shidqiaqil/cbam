@@ -42,7 +42,8 @@ class EnergySalesImport implements ToCollection, WithHeadingRow, WithChunkReadin
             if (empty($row['en_name']) && empty($row['use_product']) && empty($row['en_mgt_name'])) continue;
 
             $monthCode = self::getMonthCode($this->period_month);
-            $quantity = round((float) ($row[$monthCode] ?? 0), 2);
+            // $quantity = round((float) ($row[$monthCode] ?? 0), 2);
+            $quantity = round((float) str_replace(',', '.', str_replace('.', '', (string) ($row[$monthCode] ?? 0))), 2);
 
             MasterEnergySales::updateOrCreate(
                 [
