@@ -389,7 +389,83 @@
                         <span class="badge bg-secondary-lt text-secondary">tCO2/MWh</span>
                     </td>
                     <td class="text-end font-monospace">
-                        <span class="badge bg-warning-lt text-warning fw-normal">TBA</span>
+                        @if($jElecEF !== null)
+                        <div class="d-flex align-items-center justify-content-end gap-1 flex-nowrap">
+                            <span class="fw-semibold text-success text-nowrap">{{ number_format($jElecEF, 4) }}</span>
+                            <span class="badge badge-sm bg-light text-primary flex-shrink-0" data-bs-toggle="tooltip"
+                                data-bs-placement="left" data-bs-html="true" data-bs-custom-class="tooltip-wide"
+                                title="{{ $tooltipJElecEF }}">i</span>
+                        </div>
+                        @else
+                        <span class="text-muted opacity-50">—</span>
+                        @endif
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+    {{-- ======================================================== --}}
+    {{-- SECTION (k) — Electricity Exported --}}
+    {{-- ======================================================== --}}
+
+    <div class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom border-top bg-light mt-3">
+        <span class="text-muted small">
+            <i class="ti ti-table me-1"></i>
+            (k) Electricity Exported from the Production Process
+        </span>
+    </div>
+
+    <div class="table-responsive ps-3">
+        <table class="table table-bordered table-hover align-middle mb-0 small">
+            <thead>
+                <tr class="bg-primary text-white">
+                    <th style="min-width:300px;">Description</th>
+                    <th class="text-center" style="width:120px;">Unit</th>
+                    <th class="text-end" style="min-width:160px;">Value</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white">
+
+                {{-- Row 1: Amounts exported --}}
+                <tr>
+                    <td class="fw-medium">Amounts exported</td>
+                    <td class="text-center">
+                        <span class="badge bg-secondary-lt text-secondary">MWh</span>
+                    </td>
+                    <td class="text-end font-monospace">
+                        @if($kAmountsExported !== null)
+                        <div class="d-flex align-items-center justify-content-end gap-1 flex-nowrap">
+                            <span class="fw-semibold text-success text-nowrap">{{ number_format($kAmountsExported, 3)
+                                }}</span>
+                            <span class="badge badge-sm bg-light text-primary flex-shrink-0" data-bs-toggle="tooltip"
+                                data-bs-placement="left" data-bs-html="true" data-bs-custom-class="tooltip-wide"
+                                title="{{ $tooltipKAmountsExported }}">i</span>
+                        </div>
+                        @else
+                        <span class="text-muted opacity-50">—</span>
+                        @endif
+                    </td>
+                </tr>
+
+                {{-- Row 2: Emission factor --}}
+                <tr class="bg-light">
+                    <td class="fw-medium">Emission factor of the electricity</td>
+                    <td class="text-center">
+                        <span class="badge bg-secondary-lt text-secondary">tCO2/MWh</span>
+                    </td>
+                    <td class="text-end font-monospace">
+                        @if($kElecEF !== null)
+                        <div class="d-flex align-items-center justify-content-end gap-1 flex-nowrap">
+                            <span class="fw-semibold text-nowrap">{{ number_format($kElecEF, 4) }}</span>
+                            <span class="badge badge-sm bg-light text-primary flex-shrink-0" data-bs-toggle="tooltip"
+                                data-bs-placement="left" data-bs-html="true" data-bs-custom-class="tooltip-wide"
+                                title="{{ $tooltipKElecEF }}">i</span>
+                        </div>
+                        @else
+                        <span class="text-muted opacity-50">—</span>
+                        @endif
                     </td>
                 </tr>
 
@@ -405,7 +481,8 @@
             (g) DirEm* = Total Direct Emissions from C_Emissions. &nbsp;
             (h) Steam conv = 3.18/1000 TJ/Ton. &nbsp;
             (i) Imported = Table6.1+Plate2.1+HRC2.1; Exported = Table5.1 Grand Total. &nbsp;
-            (j) Electricity from Table9[2]. EF = TBA.
+            (j) Electricity from Table9[2]. EF from Table11 Total row. &nbsp;
+            (k) Amounts = Table7 Reverse Power/1000. EF = Table10 Total (Table2.1 blended EF).
         </span>
     </div>
 

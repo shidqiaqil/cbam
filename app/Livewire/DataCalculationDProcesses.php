@@ -27,13 +27,17 @@ class DataCalculationDProcesses extends Component
 
     // ── (i) Waste gases ───────────────────────────────────────────────────────
     public ?float $iImportedAmount = null;  // TJ: Table6.1 COG[0] + Plate Table2.1[0] + HRC Table2.1[0]
-    public ?float $iImportedEF     = null;  // tCO2/TJ: steam EF constant 0.195
+    public ?float $iImportedEF     = null;  // tCO2/TJ: COG emission factor constant 44.4
     public ?float $iExportedAmount = null;  // TJ: Table5.1 Grand Total byproduct
     public ?float $iExportedEF     = null;  // tCO2/TJ: Table5.2 Emission Factor row
 
     // ── (j) Indirect emissions from electricity ───────────────────────────────
     public ?float $jElecConsumption = null; // MWh: Table9 Electricity imported
-    public ?float $jElecEF          = null; // tCO2/MWh: TBA
+    public ?float $jElecEF          = null; // tCO2/MWh: Table11 Total imported EF
+
+    // ── (k) Electricity exported from the production process ──────────────────
+    public ?float $kAmountsExported = null; // MWh: Table7 Reverse Power/1000
+    public ?float $kElecEF          = null; // tCO2/MWh: Table10 Total EF
 
     // =========================================================================
     // Period helpers
@@ -143,6 +147,7 @@ class DataCalculationDProcesses extends Component
         $this->loadSection_h();
         $this->loadSection_i();
         $this->loadSection_j();
+        $this->loadSection_k();
     }
 
     // ── (a) Total Production Levels ───────────────────────────────────────────
@@ -188,8 +193,8 @@ class DataCalculationDProcesses extends Component
     // - Steam Emission Factor (KPE): 0.195 tCO2/Ton
     private function loadSection_h(): void
     {
-        $steamConversion = 3.18 / 1000; // TJ/Ton
-        $steamEF         = 0.195;        // tCO2/Ton
+        $steamTJperTon = 3.18 / 1000;  // TJ/Ton conversion
+        $steamEFperTon  = 0.195;   // tCO2/Ton
 
         $config = new ConfigurationData();
         $config->periodYear = $this->periodYear;
@@ -202,12 +207,12 @@ class DataCalculationDProcesses extends Component
 
         // Amount of net measurable heat (imported) = Purchase KPE * (3.18/1000)
         $this->hImportedHeat = $purchaseKpe !== null
-            ? (float) $purchaseKpe * $steamConversion
+            ? (float) $purchaseKpe * $steamTJperTon
             : null;
 
         // Emission factor (imported) = Purchase KPE * 0.195 / Amount of net measurable heat
         $this->hImportedEF = ($this->hImportedHeat !== null && $this->hImportedHeat > 0 && $purchaseKpe !== null)
-            ? ((float) $purchaseKpe * $steamEF) / $this->hImportedHeat
+            ? ((float) $purchaseKpe * $steamEFperTon) / $this->hImportedHeat
             : null;
 
         // ── Exported ──────────────────────────────────────────────────────────
@@ -217,7 +222,7 @@ class DataCalculationDProcesses extends Component
 
         // Amount of net measurable heat (exported) = Export to Coke Plant & Vendor * (3.18/1000)
         $this->hExportedHeat = $exportCoke !== null
-            ? (float) $exportCoke * $steamConversion
+            ? (float) $exportCoke * $steamTJperTon
             : null;
 
         // Emission factor (exported) = Export to Coke Plant & Vendor
@@ -235,8 +240,7 @@ class DataCalculationDProcesses extends Component
     // ── (i) Waste Gases ───────────────────────────────────────────────────────
     private function loadSection_i(): void
     {
-        $steamEF = 0.195; // tCO2/TJ constant
-        $COGEF   = 44.4;   // tCO2/TJ assumed constant for COG (can be updated if needed)
+        $COGEF = 44.4; // tCO2/TJ — COG emission factor
 
         $config = new ConfigurationData();
         $config->periodYear = $this->periodYear;
@@ -265,7 +269,7 @@ class DataCalculationDProcesses extends Component
         );
 
         // ── Imported EF ───────────────────────────────────────────────────────
-        // Constant: COG emission factor
+        // COG emission factor constant
         $this->iImportedEF = $COGEF;
 
         // ── Exported Amount ───────────────────────────────────────────────────
@@ -289,12 +293,34 @@ class DataCalculationDProcesses extends Component
         $config->period     = $this->period;
 
         // Table 9 row [2] = Electricity → imported
-        $table9 = $config->emissionTableData9();
+        $table9  = $config->emissionTableData9();
         $elecRow = $table9->values()->get(2);
         $this->jElecConsumption = $elecRow ? (float) ($elecRow['imported'] ?? 0) : null;
 
-        // EF = TBA
-        $this->jElecEF = null;
+        // EF = Table 11 (emissionTableData11b) Column EF (tCO2/MWh) [3]
+        // index [3] = Total row → field 'ef' = blended EF of Slab+Plate+HRC
+        $table11b = $config->emissionTableData11b();
+        $efRow11b = $table11b->values()->get(3);
+        $this->jElecEF = $efRow11b ? (float) ($efRow11b['ef'] ?? 0) : null;
+    }
+
+    // ── (k) Electricity Exported from the Production Process ──────────────────
+    private function loadSection_k(): void
+    {
+        $config = new ConfigurationData();
+        $config->periodYear = $this->periodYear;
+        $config->period     = $this->period;
+
+        // Amounts exported = Table 7 Quantity on Description: "Reverse Power/1000"
+        $table7   = $config->energyTableDataExportElectricity();
+        $rpRow    = $table7->firstWhere('description', 'Reverse Power/1000');
+        $this->kAmountsExported = $rpRow ? (float) ($rpRow['quantity'] ?? 0) : null;
+
+        // Emission factor = Table 10 Column Emission Factor (tCO2/MWh) [3]
+        // index [3] = Total row → emission_factor = blended EF (sum em / sum amt MWh)
+        $table10  = $config->emissionTableData10();
+        $efRow10  = $table10->values()->get(3);
+        $this->kElecEF = $efRow10 ? (float) ($efRow10['emission_factor'] ?? 0) : null;
     }
 
     // =========================================================================
@@ -499,9 +525,9 @@ class DataCalculationDProcesses extends Component
     public function getTooltipIImportedEF(): string
     {
         return $this->nl(
-            'Constant: Steam Emission Factor',
+            'Constant: COG Emission Factor',
             '',
-            '• EF = 0.195 tCO2/TJ'
+            '• EF = 44.4 tCO2/TJ'
         );
     }
 
@@ -568,6 +594,47 @@ class DataCalculationDProcesses extends Component
         );
     }
 
+    public function getTooltipJElecEF(): string
+    {
+        return $this->nl(
+            'from ConfigurationData Steel Slab → Table 11',
+            '  emissionTableData11b() → index [3] = Total row',
+            '  Column: ef (tCO2/MWh)',
+            '',
+            '• = Sum TCO2[0:2] / Sum MWh[0:2]',
+            '• Blended EF of Electricity (Slab + Plate + HRC)',
+            '',
+            'Value: ' . $this->fmt($this->jElecEF, 4) . ' tCO2/MWh'
+        );
+    }
+
+    public function getTooltipKAmountsExported(): string
+    {
+        return $this->nl(
+            'from ConfigurationData Steel Slab → Table 7',
+            '  Description: Reverse Power/1000',
+            '  Column: quantity',
+            '',
+            '• = master_energy_data (plant_code=I02300, Reverse Power) / 1000',
+            '',
+            'Value: ' . $this->fmt($this->kAmountsExported, 3) . ' MWh'
+        );
+    }
+
+    public function getTooltipKElecEF(): string
+    {
+        return $this->nl(
+            'from ConfigurationData Steel Slab → Table 10',
+            '  emissionTableData10() → index [3] = Total row',
+            '  Column: emission_factor',
+            '',
+            '• = Sum Total Emission[0:2] / (Sum Amount[0:2] / 1000)',
+            '• Blended EF of KPE + PLN + BF Generation',
+            '',
+            'Value: ' . $this->fmt($this->kElecEF, 4) . ' tCO2/MWh'
+        );
+    }
+
     // =========================================================================
 
     public function render()
@@ -587,6 +654,9 @@ class DataCalculationDProcesses extends Component
             'tooltipIExportedAmount'  => $this->getTooltipIExportedAmount(),
             'tooltipIExportedEF'      => $this->getTooltipIExportedEF(),
             'tooltipJElec'            => $this->getTooltipJElec(),
+            'tooltipJElecEF'          => $this->getTooltipJElecEF(),
+            'tooltipKAmountsExported' => $this->getTooltipKAmountsExported(),
+            'tooltipKElecEF'          => $this->getTooltipKElecEF(),
         ]);
     }
 }
